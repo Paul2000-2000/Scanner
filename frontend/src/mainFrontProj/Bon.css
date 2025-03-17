@@ -1,0 +1,49 @@
+.bon{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    margin-top: 55px;
+    gap:25px;
+}
+
+.bon-info{
+    font-size: 1.1rem;
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: #333;
+}
+
+.bon-text{
+    font-size: 32px;
+}
+
+.buttons-bon{
+        display: flex;
+        gap: 55px;
+}
+
+.button-bon-fin{
+    width: 150px;
+    padding: 10px 20px;
+    background-color: #a1110c;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    height: 55px;
+}
+
+.button-bon-sal{
+    width: 150px;
+    padding: 10px 20px;
+    background-color: #1f63bb;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    height: 55px;
+}

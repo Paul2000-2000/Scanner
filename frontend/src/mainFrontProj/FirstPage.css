@@ -1,0 +1,27 @@
+.firstPage-buttons{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100vw;
+    height: 100vh;
+    gap: 75px;
+    margin-bottom: 25px;
+}
+
+.firstPage-button{
+    width: 200px;
+    height: 50px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    transition-duration: 0.4s;
+}
+
+.firstPage-button:hover{
+    background-color: #45a049;
+}

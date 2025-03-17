@@ -1,0 +1,25 @@
+.back-button {
+  background-color: #4CAF50; /* Green */
+  color: white;
+  border: none;
+  width: 125px;
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  margin-bottom: 15px;
+  align-self: flex-start;
+  margin-left: 8%;
+}
+
+.back-button:hover {
+  background-color: #45a049;
+  transform: scale(1.05);
+}
+
+.back-button:active {
+  background-color: #3e8e41;
+  transform: scale(0.95);
+}
