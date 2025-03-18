@@ -38,6 +38,23 @@ const handleBackStoc = () =>{
   navigate('/stoc');
 }
 
+const handleSterge =  async (bonId) => {
+ try{
+
+  const response = await axios.delete(`http://localhost:8080/stergebonsalvate/${bonId}`);
+
+  if(response.status === 200)
+  {
+    alert('Bon sters cu succes');
+    setbonuriSalvate(bonuriSalvate.filter((bon) => bon.id !== bonId));
+  }
+  
+
+ } catch (error){
+  alert('Bonul nu o a putut fi sters' , error);
+ }
+}
+
 
 const handleFinalizeaza = async (bonId) => {
   try {
@@ -115,8 +132,8 @@ const handleFinalizeaza = async (bonId) => {
                     </div>
                   </td>
                   <td className="actions">
-                    <button className="finalize-btn" onClick={() => handleFinalizeaza(bon.id)}>Finalizează</button>
-                    <button className="delete-btn">Șterge</button>
+                    <button className="finalize-btn" onClick={() => handleFinalizeaza(bon.id)}>Finalizează bon</button>
+                    <button className="delete-btn" onClick={() => handleSterge(bon.id)}>Șterge bon</button>
                   </td>
                 </tr>
               ))}

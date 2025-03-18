@@ -99,6 +99,9 @@ const handleVeziNomenclator = () =>{
 
 
 
+
+
+
 const fetchBon = async () => {
   try {
     const response = await axios.get('http://localhost:8080/bon');
@@ -108,11 +111,19 @@ const fetchBon = async () => {
     if (response.status === 200) {
       // Verifică dacă răspunsul este valid
       const bonData = response.data || { id: null, masina: null, produse: [] }; // Default object if null
+
+
+      if (!bonData || bonData.produse.length === 0) {
+        setSelectedCar(null);
+        setSearchText('');
+        localStorage.removeItem('selectedCar');
+      }
       
       setBon({
         ...bonData,
         produse: bonData.produse || [], // Asigură-te că `produse` este mereu un array
       });
+
     } else {
       console.error(`Error fetching data: ${response.status}`);
     }
@@ -120,6 +131,27 @@ const fetchBon = async () => {
     console.error('Error fetching data:', error);
   }
 };
+
+
+const fetchBonSalvat = async (carNumber) => {
+  try {
+    const response = await axios.get(`http://localhost:8080/bonuriSalvate/car`, {
+      params: { masina: carNumber },
+    });
+
+    if (response.status === 200) {
+      setBon(response.data);
+    } else {
+      setBon({ id: null, masina: null, produse: [] });
+    }
+  } catch (error) {
+    console.error("Error fetching saved bon:", error);
+    setBon({ id: null, masina: null, produse: [] });
+  }
+};
+
+
+
 
   const fetchMasini = async () => {
     try {
@@ -136,12 +168,15 @@ const fetchBon = async () => {
 
 
   const handleSelectCar = (car) => {
-    setSelectedCar(car.numar); 
-    setSearchText(`${car.numar} ${car.marca}`); 
-    setShowDropdown(false); 
-
-    localStorage.setItem('selectedCar', JSON.stringify(car));
-  }
+    setSelectedCar(car.numar);
+    setSearchText(`${car.numar} ${car.marca}`);
+    setShowDropdown(false);
+  
+    localStorage.setItem("selectedCar", JSON.stringify(car));
+  
+    // Fetch saved bon for the selected car
+    fetchBonSalvat(car.numar);
+  };
 
 
   useEffect(() => {
@@ -159,10 +194,17 @@ const fetchBon = async () => {
   const handleStergeProdus = async (bonId, cod) => {
     try {
       const response = await axios.delete(`http://localhost:8080/bonCurent/produs/${cod}`);
+
+      console.log(selectedCar);
   
       if (response.status === 200) {
         alert('Produsul a fost șters');
          fetchBon();
+         fetchProdusStoc();
+
+       
+        console.log(selectedCar);  
+
         console.log(response.data);
       } else {
         alert('A apărut o eroare');
@@ -193,8 +235,15 @@ const fetchBon = async () => {
             alert(response.data.message);
          
             setBon({ id: null, masina: null, produse: [] });
+
+            setSelectedCar(null);
+            setSearchText('');
+
+            localStorage.removeItem('selectedCar');
             
             navigate('/stoc'); // Navighează la altă pagină
+
+
         } else {
             alert("Error: " + response.data.message);
         }
@@ -203,6 +252,7 @@ const fetchBon = async () => {
         alert("Failed to submit. Please try again.");
     }
 };
+
 
 const handleFinalizeazaBon = async () => {
 
@@ -224,6 +274,11 @@ const handleFinalizeazaBon = async () => {
       if (response.status === 200) {
           alert(response.data.message);
           setBon({ id: null, masina: null, produse: [] });
+
+          setSelectedCar(null);
+          setSearchText('');
+
+          localStorage.removeItem('selectedCar');
           
           navigate('/stoc'); // Navighează la altă pagină
       } else {
@@ -234,6 +289,37 @@ const handleFinalizeazaBon = async () => {
       alert("Failed to submit. Please try again.");
   }
 };
+
+const handleStergeBon = async () =>{
+  try{
+
+    
+    const response = await axios.delete("http://localhost:8080/stergebonactiv", {
+      data: { bon: bon }  // Trimiți bonul activ către server
+    });
+
+    if(response.status === 200)
+      {
+        alert('Bon sters cu succes');
+        
+
+
+        setBon({ id: null, masina: null, produse: [] });
+        fetchProdusStoc();
+
+        setSelectedCar(null);
+        setSearchText('');
+
+        localStorage.removeItem('selectedCar');
+
+
+      }
+      
+
+  } catch (error){
+    alert('Bonul nu a putut fi sters' , error);
+  }
+}
    
 
   useEffect(() => {
@@ -470,8 +556,9 @@ const handleAddProduct = async (produs) => {
         </tbody>
       </table>
       <div className="buttons-bon">
-        <button className="button-bon-sal" onClick={handleSalveazaBon}> Salveaza </button>
-        <button className="button-bon-fin" onClick={handleFinalizeazaBon}> Finalizeaza </button>
+        <button className="button-bon-sal" onClick={handleSalveazaBon}> Salveaza bon</button>
+        <button className="button-bon-fin" onClick={handleFinalizeazaBon}> Finalizeaza bon</button>
+        <button className='button-bon-str' onClick={handleStergeBon}> Sterge bon</button>
       </div>
     </>
   ) : (
