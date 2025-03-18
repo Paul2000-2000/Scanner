@@ -1,8 +1,8 @@
 import './Stoc.css';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-
+import * as XLSX from "xlsx";
 
 
 const Stoc = () => {
@@ -10,10 +10,79 @@ const Stoc = () => {
   const [produseStoc, setProduseStoc] = useState([]);
   const [filterText, setFilterText] = useState(''); 
   const [quantities, setQuantities] = useState({});
-  const [bon, setBon] = useState({ masina: null, produse: [] });
+  const [bon, setBon] = useState({ id:null ,  masina: null, produse: [] });
   const [masini, setMasini] = useState([]);
   const [selectedCar, setSelectedCar] = useState(null);
   const navigate = useNavigate();
+
+  const [searchText, setSearchText] = useState(""); 
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+
+
+  const handleFileUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Verificăm dimensiunea fișierului (de exemplu, maxim 10MB)
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
+    if (file.size > MAX_FILE_SIZE) {
+        alert("Fișierul este prea mare! Maxim 10MB.");
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.readAsBinaryString(file);
+
+    reader.onload = async (e) => {
+        const data = e.target.result;
+        const workbook = XLSX.read(data, { type: "binary" });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+        const filteredData = jsonData.slice(1).map((row, index) => {
+            const [, denumire, cod, codbara] = row;
+            return {
+                id: index + 1,
+                denumire,
+                cod,
+                codbara,
+            };
+        });
+
+        console.log("Produse procesate:", filteredData);
+
+        await fetch("http://localhost:8080/incercarePost", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(filteredData),
+        });
+
+     
+    };
+};
+
+const handleVeziNomenclator = () =>{
+  navigate('/nomenclator');
+}
 
 
   const fetchProdusStoc = async () => {
@@ -28,9 +97,13 @@ const Stoc = () => {
     }
 };
 
+
+
 const fetchBon = async () => {
   try {
     const response = await axios.get('http://localhost:8080/bon');
+
+    console.log(response.data);
     
     if (response.status === 200) {
       // Verifică dacă răspunsul este valid
@@ -57,6 +130,110 @@ const fetchBon = async () => {
     }
   };
 
+  const filteredCars = masini.filter(car =>
+    (`${car.numar} ${car.marca}`).toLowerCase().includes(searchText.toLowerCase())
+  );
+
+
+  const handleSelectCar = (car) => {
+    setSelectedCar(car.numar); 
+    setSearchText(`${car.numar} ${car.marca}`); 
+    setShowDropdown(false); 
+
+    localStorage.setItem('selectedCar', JSON.stringify(car));
+  }
+
+
+  useEffect(() => {
+    // Check if there's a car in localStorage
+    const savedCar = localStorage.getItem('selectedCar');
+    if (savedCar) {
+      const car = JSON.parse(savedCar);
+      setSelectedCar(car.numar);
+      setSearchText(`${car.numar} ${car.marca}`);
+    }
+  }, []);
+
+
+
+  const handleStergeProdus = async (bonId, cod) => {
+    try {
+      const response = await axios.delete(`http://localhost:8080/bonCurent/produs/${cod}`);
+  
+      if (response.status === 200) {
+        alert('Produsul a fost șters');
+         fetchBon();
+        console.log(response.data);
+      } else {
+        alert('A apărut o eroare');
+      }
+    } catch (error) {
+      console.error('Eroare la ștergere:', error);
+      alert('A apărut o eroare la ștergere.');
+    }
+};
+
+
+  const handleSalveazaBon = async () => {
+
+    if (!bon || !bon.produse || bon.produse.length === 0) {
+        alert('Nu ai produse!');
+        return;
+    }
+
+    try {
+        const response = await axios.post("http://localhost:8080/adaugaBonSalvat", {
+            id: bon.id,
+            masina: bon.masina,
+            produse: bon.produse
+        });
+
+        // Dacă salvarea este reușită, actualizăm UI-ul
+        if (response.status === 200) {
+            alert(response.data.message);
+         
+            setBon({ id: null, masina: null, produse: [] });
+            
+            navigate('/stoc'); // Navighează la altă pagină
+        } else {
+            alert("Error: " + response.data.message);
+        }
+    } catch (error) {
+        console.error("Error submitting form:", error);
+        alert("Failed to submit. Please try again.");
+    }
+};
+
+const handleFinalizeazaBon = async () => {
+
+
+  if (!bon || !bon.produse || bon.produse.length === 0) {
+      alert('Nu ai produse!');
+      return;
+  }
+
+
+  try {
+      const response = await axios.post("http://localhost:8080/adaugaBonFinalizat", {
+          id: bon.id,
+          masina: bon.masina,
+          produse: bon.produse
+      });
+
+     
+      if (response.status === 200) {
+          alert(response.data.message);
+          setBon({ id: null, masina: null, produse: [] });
+          
+          navigate('/stoc'); // Navighează la altă pagină
+      } else {
+          alert("Error: " + response.data.message);
+      }
+  } catch (error) {
+      console.error("Error submitting form:", error);
+      alert("Failed to submit. Please try again.");
+  }
+};
    
 
   useEffect(() => {
@@ -69,9 +246,6 @@ const fetchBon = async () => {
     setFilterText(e.target.value); 
 };
 
-const handleBackHome = () =>{
-  navigate('/');
-}
 
 
 
@@ -109,7 +283,7 @@ const handleAddProduct = async (produs) => {
   }
 
   
-  if (!bon.masina && !selectedCar) {
+  if (!selectedCar) {
     alert("Please select a car first.");
     return;
   }
@@ -120,7 +294,7 @@ const handleAddProduct = async (produs) => {
       cod: produs.cod,
       codbara: produs.codbara,
       cantitate: desiredQuantity,
-      masina: bon.masina || selectedCar
+      masina: selectedCar
     };
 
   try {
@@ -138,8 +312,9 @@ const handleAddProduct = async (produs) => {
         setMasini(prevMasini => prevMasini.filter(car => car.numar !== selectedCar)); 
       }
 
+      fetchProdusStoc();
       fetchBon();
-      navigate('/bon');
+      
     } else {
       alert("Error: " + response.data.message);
     }
@@ -149,8 +324,8 @@ const handleAddProduct = async (produs) => {
   }
 };
 
-    const handleVeziBon = () =>{
-      navigate('/bon');
+    const handleVeziGestiune = () =>{
+      navigate('/gestiunebonuri');
     }
 
     const handleVeziBonuriSalvate = () =>{
@@ -169,10 +344,10 @@ const handleAddProduct = async (produs) => {
   return (
     <div className='stoc-produse'>
             <nav className="navigation">
-                <button className="back-button-stoc" onClick={handleBackHome}>Back</button>
+              
                 <button className="adauga-produs-btn" onClick={handleAdaugaProdus}>Adauga Produs</button>
                 <div className="stoc-produse-btns">
-                    <button className="stoc-produse-btn" onClick={handleVeziBon}>Vezi bon</button>
+                    <button className="stoc-produse-btn" onClick={handleVeziGestiune}>Gestiune Bonuri</button>
                     <button className="stoc-produse-btn" onClick={handleVeziBonuriSalvate}>Bonuri salvate</button>
                     <button className="stoc-produse-btn" onClick={handleVeziBonuriFinalizate}>Bonuri finalizate</button>
                 </div>
@@ -187,17 +362,47 @@ const handleAddProduct = async (produs) => {
             />
 
             
-      { ( bon.masina===null ||  bon.produse?.length === 0 ) && (
+     
         <div>
-          <select onChange={(e) => setSelectedCar(e.target.value)} defaultValue="">
-            <option value="" disabled>Select a car</option>
-            {masini.filter(car => car.disponibilitate === 1).map(car => (
-              <option key={car.id} value={car.numar}>{car.numar}</option>
-            ))}
-          </select>
-        </div>
-      )}
+        <div className="car-selector" ref={dropdownRef}>
+      {/* Input field where user can type */}
+      <input
+        type="text"
+        placeholder="Selecteaza masina"
+        value={searchText}
+        onChange={(e) => {
+          setSearchText(e.target.value);
+          setShowDropdown(true); 
+        }}
+        onFocus={() => setShowDropdown(true)} // Show dropdown when input is focused
+        className="car-input"
+      />
 
+      
+{showDropdown && filteredCars.length > 0 && (
+    <ul className="car-dropdown">
+      {filteredCars.map(car => (
+        <li key={car.id} onClick={() => handleSelectCar(car)} className='car-item'> 
+          {car.numar} {car.marca}
+        </li>
+      ))}
+    </ul>
+  )}
+    </div>
+        </div>
+      
+
+          <div className='stoc-container'> 
+            <div className='input-fisier'>
+            
+                <input 
+                   type="file" 
+                   accept=".xls,.xlsx" 
+                   onChange={handleFileUpload} 
+                   className="file-input"
+                />
+      <button className='firstPage-button' onClick={handleVeziNomenclator}>Vezi Nomenclator</button>
+            </div>
             <table>
                 <thead>
                     <tr>
@@ -236,6 +441,44 @@ const handleAddProduct = async (produs) => {
                     ))}
                 </tbody>
             </table>
+            <div className='bon-activ'>
+            {bon.id ? (
+    <>
+      <p className='bon-info'>Id Bon : {bon.id}</p>
+      <p className='bon-info'>Masina : {bon.masina}</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Denumire</th>
+            <th>Cod</th>
+            <th>Codbara</th>
+            <th>Cantitate</th>
+          </tr>
+        </thead>
+        <tbody>
+          {bon.produse.map((produs) => (
+            <tr key={produs.cod}>
+              <td>{produs.denumire}</td>
+              <td>{produs.cod}</td>
+              <td>{produs.codbara}</td>
+              <td>{produs.cantitate}</td>
+              <td>
+                <button onClick={() => handleStergeProdus(bon.id, produs.cod)}>Sterge produs</button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div className="buttons-bon">
+        <button className="button-bon-sal" onClick={handleSalveazaBon}> Salveaza </button>
+        <button className="button-bon-fin" onClick={handleFinalizeazaBon}> Finalizeaza </button>
+      </div>
+    </>
+  ) : (
+   null
+  )}
+            </div>
+            </div>
         </div>
   )
 }

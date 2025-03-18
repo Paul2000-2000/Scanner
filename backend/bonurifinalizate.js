@@ -190,6 +190,66 @@ const bonurifinalizate = [
         "cantitate": 2
       }
     ]
+  },
+  {
+    "id": 12,
+    "masina": "AR25ABC",
+    "produse": [
+      {
+        "denumire": "POMPA ALIMENTARE MOTORINA",
+        "cod": 6001,
+        "codbara": "400000001",
+        "cantitate": 1
+      },
+      {
+        "denumire": "SPOILER BARA FATA DREAPTA MAN",
+        "cod": 6004,
+        "codbara": "400000004",
+        "cantitate": 1
+      }
+    ]
+  },
+  {
+    "id": 20,
+    "masina": "AR78DEF",
+    "produse": [
+      {
+        "denumire": "POMPA ALIMENTARE MOTORINA",
+        "cod": 6001,
+        "codbara": "400000001",
+        "cantitate": 3
+      },
+      {
+        "denumire": "SPOILER BARA FATA DREAPTA MAN",
+        "cod": 6004,
+        "codbara": "400000004",
+        "cantitate": 1
+      },
+      {
+        "denumire": "LAMPA SPATE DREAPTA",
+        "cod": 6006,
+        "codbara": "400000006",
+        "cantitate": 1
+      }
+    ]
+  },
+  {
+    "id": 26,
+    "masina": "AR28AXP",
+    "produse": [
+      {
+        "denumire": "FURTUN CU INSERTIE F18",
+        "cod": 6019,
+        "codbara": "400000019",
+        "cantitate": 1
+      },
+      {
+        "denumire": "CARCASA SCARA",
+        "cod": 6015,
+        "codbara": "400000015",
+        "cantitate": 1
+      }
+    ]
   }
 ];
 

@@ -19,6 +19,10 @@ const BonuriFinalizate = () => {
   const handleBackStoc = () =>{
     navigate('/stoc');
   }
+
+  const handleVeziBon =  ( bonId ) => {
+    navigate(`/bonfinalizat/${bonId}`);
+  }
   
 
   useEffect(() => {
@@ -44,6 +48,9 @@ const BonuriFinalizate = () => {
                 <tr key={bon.id}>
                   <td>{bon.id}</td>
                   <td>{bon.masina}</td>
+                  <td>
+                    <button onClick={() => handleVeziBon(bon.id)}>Vezi bon</button>
+                  </td>
                 </tr>
               ))}
             </tbody>

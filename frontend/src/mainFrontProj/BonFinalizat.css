@@ -22,6 +22,7 @@
 .buttons-bon{
         display: flex;
         gap: 55px;
+        margin-top: 25px;
 }
 
 .button-bon-fin{

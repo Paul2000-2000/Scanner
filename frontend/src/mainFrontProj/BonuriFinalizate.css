@@ -51,6 +51,7 @@
 .bon-table th {
   background-color: #5a3f3f;
   font-weight: bold;
+  color: white;
 }
 
 .bon-table tr:nth-child(even) {
