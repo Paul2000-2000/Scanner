@@ -10,9 +10,10 @@ import FirstPage from './mainFrontProj/FirstPage';
 import VNomenclator from './mainFrontProj/VNomenclator';
 import Stoc from './mainFrontProj/Stoc';
 import AdaugaProdus from './mainFrontProj/AdaugaProdus';
-import Bon from './mainFrontProj/Bon';
+
 import BonuriSalvate from './mainFrontProj/BonuriSalvate';
 import BonuriFinalizate from './mainFrontProj/BonuriFinalizate';
+import BonFinalizat from './mainFrontProj/BonFinalizat';
  
 function App() {
  
@@ -28,14 +29,13 @@ function App() {
           <Route path='/istoric-bonuri' element ={<IstoricBonuriPage />} /> */}
 
           
-          <Route path="/" element={<FirstPage />} />
+          <Route path="/" element={<Stoc />} />
           <Route path="/nomenclator" element={<VNomenclator />} />
           <Route path="/stoc" element={<Stoc />} />
           <Route path="/adauga-produs" element={<AdaugaProdus />} />
-          <Route path='/bon' element={<Bon />} />
           <Route path='/bonurisalvate' element={<BonuriSalvate/>}/>
           <Route path='/bonurifinalizate' element={<BonuriFinalizate/>} />
-
+          <Route path='/bonfinalizat/:id' element={<BonFinalizat />} />
         </Routes>
       </BrowserRouter>
     </div>

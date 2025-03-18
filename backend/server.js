@@ -52,8 +52,21 @@ app.get("/produseNomenclator", (req, res) => {
   res.send(produseNomenclator);
 });
 
-app.get("/produseStoc", (req, res) => {
-  res.send(produseStoc);
+app.get("/produseStoc", async (req, res) => {
+  try {
+    const __filenameStoc = fileURLToPath(import.meta.url);
+    const __dirnameStoc = path.dirname(__filenameStoc);
+    const filePathStoc = path.join(__dirnameStoc, "stoc.js");
+    const bonModuleUrl = pathToFileURL(filePathStoc).href;
+
+    // Import dinamic cu "cache busting" pentru a evita caching-ul
+    const mod = await import(bonModuleUrl + "?update=" + Date.now());
+
+    res.json(mod.default); // Trimite obiectul bon ca JSON
+  } catch (error) {
+    console.error("Eroare", error);
+    res.status(500).json({ message: "Eroare." });
+  }
 });
 
 const __filenameStoc = fileURLToPath(import.meta.url);
@@ -159,7 +172,6 @@ app.post("/adaugaBon", async (req, res) => {
       await fs.promises.writeFile(filePathCounter, updatedCounter);
     }
 
-    // 🔹 Asignăm mașina bonului dacă nu este deja asignată
     if (!bon.masina && produs.masina) {
       bon.masina = produs.masina;
     }
@@ -704,6 +716,18 @@ app.post("/incercarePost", (req, res) => {
 
 app.get("/incercareGet", (req, res) => {
   res.json(incercare);
+});
+
+app.get("/bonfinalizat/:bonId", (req, res) => {
+  const bonId = parseInt(req.params.bonId); // Extract from route parameters
+
+  const bon = bonuriFinalizate.find((bon) => bon.id === bonId);
+
+  if (!bon) {
+    return res.status(404).json({ error: "Bon not found" });
+  }
+
+  res.json(bon);
 });
 
 app.listen(8080, () => {

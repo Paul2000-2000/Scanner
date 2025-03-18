@@ -25,7 +25,7 @@ const stoc = [
     "denumire": "SPOILER BARA FATA DREAPTA MAN",
     "cod": 6004,
     "codbara": "400000004",
-    "cantitate": 27
+    "cantitate": 24
   },
   {
     "id": 5,
@@ -39,21 +39,21 @@ const stoc = [
     "denumire": "LAMPA SPATE DREAPTA",
     "cod": 6006,
     "codbara": "400000006",
-    "cantitate": 15
+    "cantitate": 12
   },
   {
     "id": 7,
     "denumire": "PRES BARA SPATE",
     "cod": 6007,
     "codbara": "400000007",
-    "cantitate": 45
+    "cantitate": 43
   },
   {
     "id": 8,
     "denumire": "ALIMENTATOR MOTORINA",
     "cod": 6008,
     "codbara": "400000008",
-    "cantitate": 32
+    "cantitate": 29
   },
   {
     "id": 9,
@@ -81,28 +81,28 @@ const stoc = [
     "denumire": "SPRAY ALB LUCIOS",
     "cod": 6013,
     "codbara": "400000013",
-    "cantitate": 11
+    "cantitate": 10
   },
   {
     "id": 14,
     "denumire": "SPRAY BRONZ EFECT",
     "cod": 6014,
     "codbara": "400000014",
-    "cantitate": 18
+    "cantitate": 17
   },
   {
     "id": 15,
     "denumire": "CARCASA SCARA",
     "cod": 6015,
     "codbara": "400000015",
-    "cantitate": 19
+    "cantitate": 17
   },
   {
     "id": 16,
     "denumire": "LAMPA SPATE DREAPTA",
     "cod": 6016,
     "codbara": "400000016",
-    "cantitate": 37
+    "cantitate": 35
   },
   {
     "id": 17,
@@ -123,7 +123,7 @@ const stoc = [
     "denumire": "FURTUN CU INSERTIE F18",
     "cod": 6019,
     "codbara": "400000019",
-    "cantitate": 1
+    "cantitate": 0
   }
 ];
 
