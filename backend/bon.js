@@ -1,35 +1,17 @@
 const bon = {
-  "id": 28,
-  "masina": "AR45XYZ",
+  "id": 49,
+  "masina": "AR28AXP",
   "produse": [
     {
-      "denumire": "PRES BARA SPATE",
-      "cod": 6007,
-      "codbara": "400000007",
-      "cantitate": 2
-    },
-    {
-      "denumire": "SPRAY BRONZ EFECT",
-      "cod": 6014,
-      "codbara": "400000014",
+      "denumire": "ACUMULATORI PROMOTIVE SILVER",
+      "cod": 6002,
+      "codbara": "400000002",
       "cantitate": 1
     },
     {
-      "denumire": "CARCASA SCARA",
-      "cod": 6015,
-      "codbara": "400000015",
-      "cantitate": 1
-    },
-    {
-      "denumire": "LAMPA SPATE DREAPTA",
-      "cod": 6016,
-      "codbara": "400000016",
-      "cantitate": 2
-    },
-    {
-      "denumire": "LAMPA SPATE DREAPTA",
-      "cod": 6006,
-      "codbara": "400000006",
+      "denumire": "ALIMENTATOR MOTORINA",
+      "cod": 6008,
+      "codbara": "400000008",
       "cantitate": 1
     }
   ]

@@ -6,7 +6,7 @@ import { BrowserRouter, Routes , Route} from 'react-router-dom';
 // import EditeazaProdusPage from './pages/EditeazaProdusPage';
 // import BonPage from './pages/BonPage';
 // import IstoricBonuriPage from './pages/IstoricBonuriPage';
-import FirstPage from './mainFrontProj/FirstPage';
+
 import VNomenclator from './mainFrontProj/VNomenclator';
 import Stoc from './mainFrontProj/Stoc';
 import AdaugaProdus from './mainFrontProj/AdaugaProdus';

@@ -4,14 +4,14 @@ const stoc = [
     "denumire": "POMPA ALIMENTARE MOTORINA",
     "cod": 6001,
     "codbara": "400000001",
-    "cantitate": 2
+    "cantitate": 1
   },
   {
     "id": 2,
     "denumire": "ACUMULATORI PROMOTIVE SILVER",
     "cod": 6002,
     "codbara": "400000002",
-    "cantitate": 9
+    "cantitate": 7
   },
   {
     "id": 3,
@@ -25,49 +25,49 @@ const stoc = [
     "denumire": "SPOILER BARA FATA DREAPTA MAN",
     "cod": 6004,
     "codbara": "400000004",
-    "cantitate": 24
+    "cantitate": 39
   },
   {
     "id": 5,
     "denumire": "CARCASA SCARA",
     "cod": 6005,
     "codbara": "400000005",
-    "cantitate": 18
+    "cantitate": 22
   },
   {
     "id": 6,
     "denumire": "LAMPA SPATE DREAPTA",
     "cod": 6006,
     "codbara": "400000006",
-    "cantitate": 12
+    "cantitate": 13
   },
   {
     "id": 7,
     "denumire": "PRES BARA SPATE",
     "cod": 6007,
     "codbara": "400000007",
-    "cantitate": 43
+    "cantitate": 41
   },
   {
     "id": 8,
     "denumire": "ALIMENTATOR MOTORINA",
     "cod": 6008,
     "codbara": "400000008",
-    "cantitate": 29
+    "cantitate": 27
   },
   {
     "id": 9,
     "denumire": "FURTUN CU INSERTIE F18",
     "cod": 6009,
     "codbara": "400000009",
-    "cantitate": 23
+    "cantitate": 20
   },
   {
     "id": 10,
     "denumire": "PRIZA 5*32A",
     "cod": 6010,
     "codbara": "400000010",
-    "cantitate": 12
+    "cantitate": 11
   },
   {
     "id": 11,
@@ -81,14 +81,14 @@ const stoc = [
     "denumire": "SPRAY ALB LUCIOS",
     "cod": 6013,
     "codbara": "400000013",
-    "cantitate": 10
+    "cantitate": 17
   },
   {
     "id": 14,
     "denumire": "SPRAY BRONZ EFECT",
     "cod": 6014,
     "codbara": "400000014",
-    "cantitate": 17
+    "cantitate": 19
   },
   {
     "id": 15,
@@ -102,7 +102,7 @@ const stoc = [
     "denumire": "LAMPA SPATE DREAPTA",
     "cod": 6016,
     "codbara": "400000016",
-    "cantitate": 35
+    "cantitate": 34
   },
   {
     "id": 17,
