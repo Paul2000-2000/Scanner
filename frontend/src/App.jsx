@@ -14,6 +14,9 @@ import AdaugaProdus from './mainFrontProj/AdaugaProdus';
 import BonuriSalvate from './mainFrontProj/BonuriSalvate';
 import BonuriFinalizate from './mainFrontProj/BonuriFinalizate';
 import BonFinalizat from './mainFrontProj/BonFinalizat';
+
+import GestiuneBonuri from './mainFrontProj/GestiuneBonuri';
+import BonGestionat from './mainFrontProj/BonGestionat';
  
 function App() {
  
@@ -36,6 +39,9 @@ function App() {
           <Route path='/bonurisalvate' element={<BonuriSalvate/>}/>
           <Route path='/bonurifinalizate' element={<BonuriFinalizate/>} />
           <Route path='/bonfinalizat/:id' element={<BonFinalizat />} />
+          <Route path='/gestiunebonuri' element={<GestiuneBonuri/> } />
+          <Route path='/bonurigestionate/:id' element={<BonGestionat />} />
+
         </Routes>
       </BrowserRouter>
     </div>

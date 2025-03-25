@@ -1,67 +1,47 @@
 const bonurisalvate = [
   {
-    "id": 21,
-    "masina": "AR25ABC",
+    "id": 43,
+    "masina": "AR28AXP",
     "produse": [
       {
-        "denumire": "SPOILER BARA FATA DREAPTA MAN",
-        "cod": 6004,
-        "codbara": "400000004",
-        "cantitate": 1
-      },
-      {
-        "denumire": "ALIMENTATOR MOTORINA",
-        "cod": 6008,
-        "codbara": "400000008",
-        "cantitate": 2
-      },
-      {
-        "denumire": "SPRAY BRONZ EFECT",
-        "cod": 6014,
-        "codbara": "400000014",
-        "cantitate": 1
-      },
-      {
-        "denumire": "CARCASA SCARA",
-        "cod": 6015,
-        "codbara": "400000015",
-        "cantitate": 1
+        "denumire": "COMPRESOR AER SCANIA",
+        "cod": "NRF 32705",
+        "codbara": "400000010168",
+        "cantitate": 1,
+        "timp": "24-18:18"
       }
     ]
   },
   {
-    "id": 28,
-    "masina": "AR45XYZ",
+    "id": 46,
+    "masina": "AR78DEF",
     "produse": [
       {
-        "denumire": "PRES BARA SPATE",
-        "cod": 6007,
-        "codbara": "400000007",
-        "cantitate": 2
+        "denumire": "POMPA ALIMENTARE MOTORINA",
+        "cod": "68461",
+        "codbara": "400000010021",
+        "cantitate": 1,
+        "timp": "24-18:34"
+      }
+    ]
+  },
+  {
+    "id": 40,
+    "masina": "AR25ABC",
+    "produse": [
+      {
+        "denumire": "ACUMULATORI PROMOTIVE SILVER",
+        "cod": "680108100",
+        "codbara": "400000010038",
+        "cantitate": 1,
+        "timp": "24-09:59"
       },
       {
-        "denumire": "SPRAY BRONZ EFECT",
-        "cod": 6014,
-        "codbara": "400000014",
-        "cantitate": 1
-      },
-      {
-        "denumire": "CARCASA SCARA",
-        "cod": 6015,
-        "codbara": "400000015",
-        "cantitate": 1
-      },
-      {
-        "denumire": "LAMPA SPATE DREAPTA",
-        "cod": 6016,
-        "codbara": "400000016",
-        "cantitate": 2
-      },
-      {
-        "denumire": "LAMPA SPATE DREAPTA",
-        "cod": 6006,
-        "codbara": "400000006",
-        "cantitate": 1
+        "denumire": "POMPA ALIMENTARE MOTORINA",
+        "cod": "68461",
+        "codbara": "400000010021",
+        "cantitate": 2,
+        "timp": "24-10:00"
       }
     ]
   }

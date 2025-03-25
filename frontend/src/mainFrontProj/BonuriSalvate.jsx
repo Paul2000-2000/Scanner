@@ -17,81 +17,88 @@ const BonuriSalvate = () => {
     }
   };
 
-  const handleStergeProdus = async (bonId, cod) => {
-    try {
-      const response = await axios.delete(`http://localhost:8080/bon/${bonId}/produs/${cod}`);
+//   const handleStergeProdus = async (bonId, cod) => {
+//     try {
+//       const response = await axios.delete(`http://localhost:8080/bon/${bonId}/produs/${cod}`);
   
-      if (response.status === 200) {
-        alert('Produsul a fost șters');
-        fetchBonuriSalvate(); // Reîncărcăm datele după ștergere
-        console.log(response.data);
-      } else {
-        alert('A apărut o eroare');
-      }
-    } catch (error) {
-      console.error('Eroare la ștergere:', error);
-      alert('A apărut o eroare la ștergere.');
-    }
-};
+//       if (response.status === 200) {
+//         alert('Produsul a fost șters');
+       
+//         console.log(response.data);
+//       } else {
+//         alert('A apărut o eroare');
+//       }
+//     } catch (error) {
+//       console.error('Eroare la ștergere:', error);
+//       alert('A apărut o eroare la ștergere.');
+//     }
+// };
 
 const handleBackStoc = () =>{
   navigate('/stoc');
 }
 
-const handleSterge =  async (bonId) => {
- try{
+// const handleSterge =  async (bonId) => {
+//  try{
 
-  const response = await axios.delete(`http://localhost:8080/stergebonsalvate/${bonId}`);
+//   const response = await axios.delete(`http://localhost:8080/stergebonsalvate/${bonId}`);
 
-  if(response.status === 200)
-  {
-    alert('Bon sters cu succes');
-    setbonuriSalvate(bonuriSalvate.filter((bon) => bon.id !== bonId));
-  }
+//   if(response.status === 200)
+//   {
+//     alert('Bon sters cu succes');
+//     setbonuriSalvate(bonuriSalvate.filter((bon) => bon.id !== bonId));
+//   }
   
 
- } catch (error){
-  alert('Bonul nu o a putut fi sters' , error);
- }
-}
+//  } catch (error){
+//   alert('Bonul nu o a putut fi sters' , error);
+//  }
+// }
 
 
-const handleFinalizeaza = async (bonId) => {
-  try {
-    console.log("Finalizing bon with ID:", bonId);
+// const handleFinalizeaza = async (bonId) => {
+//   try {
+//     console.log("Finalizing bon with ID:", bonId);
 
-    // Send a POST request using axios
-    const response = await axios.post("http://localhost:8080/bonurifinalizatesal", { bonId });
+//     // Send a POST request using axios
+//     const response = await axios.post("http://localhost:8080/bonurifinalizatesal", { bonId });
 
-    // Check if the response status is OK (200)
-    if (response.status === 200) {
-      console.log("Bon finalizat:", response.data.message);
-      // Update the UI by removing the finalized bon from the list
-      setbonuriSalvate(prevBonuri => prevBonuri.filter(bon => bon.id !== bonId));
-    } else {
-      console.error("Error finalizing bon:", response.statusText);
-      alert('A apărut o eroare la finalizarea bonului');
-    }
-  } catch (error) {
-    console.error("Error in finalization process:", error);
-    if (error.response) {
-      // The request was made, and the server responded with an error
-      console.log("Response error: ", error.response);
-    } else if (error.request) {
-      // The request was made but no response was received
-      console.log("Request error: ", error.request);
-    } else {
-      // Something else caused the error
-      console.log("Error message: ", error.message);
-    }
-    alert('A apărut o eroare la finalizarea bonului');
-  }
-};
+//     // Check if the response status is OK (200)
+//     if (response.status === 200) {
+//       console.log("Bon finalizat:", response.data.message);
+//       // Update the UI by removing the finalized bon from the list
+//       setbonuriSalvate(prevBonuri => prevBonuri.filter(bon => bon.id !== bonId));
+//     } else {
+//       console.error("Error finalizing bon:", response.statusText);
+//       alert('A apărut o eroare la finalizarea bonului');
+//     }
+//   } catch (error) {
+//     console.error("Error in finalization process:", error);
+//     if (error.response) {
+//       // The request was made, and the server responded with an error
+//       console.log("Response error: ", error.response);
+//     } else if (error.request) {
+//       // The request was made but no response was received
+//       console.log("Request error: ", error.request);
+//     } else {
+//       // Something else caused the error
+//       console.log("Error message: ", error.message);
+//     }
+//     alert('A apărut o eroare la finalizarea bonului');
+//   }
+// };
 
 
   useEffect(() => {
     fetchBonuriSalvate();
   }, []);  // Add empty dependency array to only run once
+
+
+   // useEffect pentru actualizarea listei de bonuri după fiecare modificare
+   useEffect(() => {
+    fetchBonuriSalvate(); // Aceasta va reîncărca bonurile după fiecare modificare
+  }, [bonuriSalvate]); // Se execută de fiecare dată când bonuriSalvate se schimbă
+
 
   return (
     <div className="container">
@@ -108,7 +115,7 @@ const handleFinalizeaza = async (bonId) => {
               <th>ID</th>
               <th>Mașina</th>
               <th>Produse</th>
-              <th>Acțiuni</th>
+              {/* <th>Acțiuni</th> */}
             </tr>
           </thead>
           <tbody>
@@ -126,15 +133,16 @@ const handleFinalizeaza = async (bonId) => {
                           <p>Cod: {produs.cod}</p>
                           <p>Cod Bara: {produs.codbara}</p>
                           <p>Cantitate: {produs.cantitate}</p>
-                          <button className="delete-btn" onClick={() => handleStergeProdus(bon.id, produs.cod)}>Șterge</button>
+                          <p>Timp: {produs.timp}</p>
+                          {/* <button className="delete-btn" onClick={() => handleStergeProdus(bon.id, produs.cod)}>Șterge</button> */}
                         </div>
                       ))}
                     </div>
                   </td>
-                  <td className="actions">
+                  {/* <td className="actions">
                     <button className="finalize-btn" onClick={() => handleFinalizeaza(bon.id)}>Finalizează bon</button>
                     <button className="delete-btn" onClick={() => handleSterge(bon.id)}>Șterge bon</button>
-                  </td>
+                  </td> */}
                 </tr>
               ))}
           </tbody>

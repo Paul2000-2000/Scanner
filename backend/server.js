@@ -11,8 +11,10 @@ import fs from "fs";
 import counter from "./counter.js";
 import bonuriSalvate from "./bonurisalvate.js";
 import bonuriFinalizate from "./bonurifinalizate.js";
-import incercare from "./incercare.js";
+import bonurigestionate from "./bonurigestionate.js";
+import nomenclator from "./nomenclator.js";
 import bodyParser from "body-parser";
+import { time } from "console";
 
 const app = express();
 const corsOptions = {
@@ -29,27 +31,59 @@ app.use(express.urlencoded({ limit: "50mb", extended: true }));
 app.use(bodyParser.json({ limit: "50mb" }));
 app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
 
-////// ISTORIC BON DATA
+app.post("/incercarePost", (req, res) => {
+  const __filenameIncercare = fileURLToPath(import.meta.url);
+  const __dirnameIncercare = path.dirname(__filenameIncercare);
+  const filePathIncercare = path.join(__dirnameIncercare, "nomenclator.js");
 
-app.post("/resetBon", (req, res) => {
-  produseBon.length = 0;
-  const filePathBon = path.join(__dirname, "dataBon.js");
-  const dataToWriteBon = `const produseBon = [];\n\nexport default produseBon;`;
+  const updatedIncercareSters = `const nomenclator = [];\n\nexport default nomenclator;`;
+  fs.writeFileSync(filePathIncercare, updatedIncercareSters);
 
-  fs.writeFileSync(filePathBon, dataToWriteBon);
+  const newProducts = req.body;
 
-  res.status(200).send({
-    message: "Current Bon has been cleared.",
-  });
+  console.log("Produse primite din frontend:", newProducts);
+
+  if (!newProducts || newProducts.length === 0) {
+    return res.status(400).json({ message: "Nu au fost trimise produse!" });
+  }
+
+  const updatedIncercare = `const nomenclator = ${JSON.stringify(
+    newProducts,
+    null,
+    2
+  )};\n\nexport default nomenclator;`;
+
+  console.log(
+    "Cum arată conținutul fișierului incercare.js:",
+    updatedIncercare
+  );
+
+  fs.writeFileSync(filePathIncercare, updatedIncercare);
+
+  const __filenameStoc = fileURLToPath(import.meta.url);
+  const __dirnameStoc = path.dirname(__filenameStoc);
+  const filePathStoc = path.join(__dirnameStoc, "stoc.js");
+
+  const updatedStocSters = `const stoc = [];\n\nexport default stoc;`;
+  fs.writeFileSync(filePathStoc, updatedStocSters);
+
+  const updatedStoc = `const stoc = ${JSON.stringify(
+    newProducts,
+    null,
+    2
+  )};\n\nexport default stoc;`;
+
+  fs.writeFileSync(filePathStoc, updatedStoc);
+
+  res.json({ message: "Produse adăugate cu succes!", incercare: newProducts });
 });
 
-app.get("/produseIstoricBon", (req, res) => {
-  res.send(produseIstoricBon);
-  console.log(produseIstoricBon);
+app.get("/incercareGet", (req, res) => {
+  res.json(incercare);
 });
 
-app.get("/produseNomenclator", (req, res) => {
-  res.send(produseNomenclator);
+app.get("/produseNomenclator", async (req, res) => {
+  res.json(nomenclator);
 });
 
 app.get("/produseStoc", async (req, res) => {
@@ -69,6 +103,23 @@ app.get("/produseStoc", async (req, res) => {
   }
 });
 
+app.post("/resetBon", (req, res) => {
+  produseBon.length = 0;
+  const filePathBon = path.join(__dirname, "dataBon.js");
+  const dataToWriteBon = `const produseBon = [];\n\nexport default produseBon;`;
+
+  fs.writeFileSync(filePathBon, dataToWriteBon);
+
+  res.status(200).send({
+    message: "Current Bon has been cleared.",
+  });
+});
+
+app.get("/produseIstoricBon", (req, res) => {
+  res.send(produseIstoricBon);
+  console.log(produseIstoricBon);
+});
+
 const __filenameStoc = fileURLToPath(import.meta.url);
 const __dirnameStoc = path.dirname(__filenameStoc);
 const filePathStoc = path.join(__dirnameStoc, "stoc.js");
@@ -86,6 +137,11 @@ app.put("/updateStock", async (req, res) => {
 
     if (productIndex === -1) {
       return res.status(404).json({ message: "Product not found in stock" });
+    }
+
+    if (produseStoc[productIndex].cantitate === undefined) {
+      // Dacă nu are câmpul `cantitate`, îl inițializăm la 0
+      produseStoc[productIndex].cantitate = 0;
     }
 
     produseStoc[productIndex].cantitate += quantity;
@@ -110,98 +166,96 @@ app.put("/updateStock", async (req, res) => {
 app.post("/adaugaBon", async (req, res) => {
   try {
     const produs = req.body;
+    console.log("Ce primesc:", produs);
 
-    console.log("ce primesc", produs);
+    // Verificăm dacă bonul există deja (bon.js)
+    const __filenameBon = fileURLToPath(import.meta.url);
+    const __dirnameBon = path.dirname(__filenameBon);
+    const filePathBon = path.join(__dirnameBon, "bon.js");
 
-    // 🔹 Validare date produs
-    if (!produs || !produs.denumire || !produs.cod || !produs.cantitate) {
+    let bon;
+    try {
+      const bonData = await fs.promises.readFile(filePathBon, "utf-8");
+      bon = eval(bonData.replace("export default", "").trim()); // Convertim în obiect
+    } catch (error) {
+      console.log("Fișierul bon.js nu există sau nu are date valide.");
+      bon = { id: null, masina: null, produse: [] }; // Inițializăm un bon gol
+    }
+
+    console.log("Bon găsit:", bon);
+
+    // Validarea datelor produsului
+    if (
+      !produs ||
+      !produs.denumire ||
+      !produs.cod ||
+      !produs.cantitate ||
+      !produs.masina ||
+      !produs.timp
+    ) {
       return res
         .status(400)
         .json({ message: "Datele produsului sunt invalide." });
     }
 
-    const __filenameBon = fileURLToPath(import.meta.url);
-    const __dirnameBon = path.dirname(__filenameBon);
-
-    const __filenameCounter = fileURLToPath(import.meta.url);
-    const __dirnameCounter = path.dirname(__filenameCounter);
-
-    const __filenameStoc = fileURLToPath(import.meta.url);
-    const __dirnameStoc = path.dirname(__filenameStoc);
-
-    // 🔹 Citim bonul și counterul actualizat din fișiere
-    const filePathBon = path.join(__dirnameBon, "bon.js");
-    const filePathCounter = path.join(__dirnameCounter, "counter.js");
-    const filePathStock = path.join(__dirnameStoc, "stoc.js");
-
-    // Citim counterul
-    const counterData = await fs.promises.readFile(filePathCounter, "utf-8");
-    const counter = eval(counterData.replace("export default", "").trim()); // Convertim în obiect
-
-    let bon = null;
-    try {
-      const bonData = await fs.promises.readFile(filePathBon, "utf-8");
-      bon = eval(bonData.replace("export default", "").trim()); // Convertim în obiect
-    } catch (error) {
-      console.log(
-        "Fișierul bon.js nu există sau nu are date valide. Vom crea un bon nou."
+    // Verificăm dacă bonul pentru mașina respectivă există
+    if (bon.masina === produs.masina) {
+      // Dacă bonul pentru mașina respectivă există, continuăm actualizarea produselor
+      const existingProduct = bon.produse.find(
+        (p) => p.codbara === produs.codbara
       );
-    }
-
-    // 🔹 Dacă bonul nu este găsit sau nu are ID, inițializăm un bon nou
-    if (!bon || !bon.id) {
+      if (existingProduct) {
+        existingProduct.cantitate += parseInt(produs.cantitate, 10); // Actualizăm cantitatea
+      } else {
+        // Dacă produsul nu există, îl adăugăm
+        bon.produse.push({
+          denumire: produs.denumire,
+          cod: produs.cod,
+          codbara: produs.codbara || "",
+          cantitate: parseInt(produs.cantitate, 10),
+          timp: produs.timp,
+        });
+      }
+    } else {
+      // Dacă bonul nu există pentru mașina respectivă, creăm unul nou
       bon = {
-        id: null,
-        masina: null,
-        produse: [],
+        id: null, // Așteptăm un ID din counter
+        masina: produs.masina,
+        produse: [
+          {
+            denumire: produs.denumire,
+            cod: produs.cod,
+            codbara: produs.codbara || "",
+            cantitate: parseInt(produs.cantitate, 10),
+            timp: produs.timp,
+          },
+        ],
       };
     }
 
-    console.log("Bon inițial:", JSON.stringify(bon, null, 2));
+    // 🔹 Actualizăm stocul
+    const __filenameStoc = fileURLToPath(import.meta.url);
+    const __dirnameStoc = path.dirname(__filenameStoc);
+    const filePathStock = path.join(__dirnameStoc, "stoc.js");
 
-    if (!bon.id) {
-      counter.bonId += 1;
-      bon.id = counter.bonId;
-
-      // Salvăm counterul actualizat
-      const updatedCounter = `const counter = ${JSON.stringify(
-        counter,
-        null,
-        2
-      )};\n\nexport default counter;`;
-      await fs.promises.writeFile(filePathCounter, updatedCounter);
-    }
-
-    if (!bon.masina && produs.masina) {
-      bon.masina = produs.masina;
-    }
-
-    if (!bon.produse) {
-      bon.produse = [];
-    }
-
-    // 🔹 Verificăm dacă produsul există deja în bon.produse
-    const existingProduct = bon.produse.find((p) => p.cod === produs.cod);
-
-    if (existingProduct) {
-      existingProduct.cantitate += parseInt(produs.cantitate, 10);
-    } else {
-      bon.produse.push({
-        denumire: produs.denumire,
-        cod: produs.cod,
-        codbara: produs.codbara || "",
-        cantitate: parseInt(produs.cantitate, 10),
-      });
-    }
-
-    console.log("Bon actualizat:", JSON.stringify(bon, null, 2));
+    const stockData = await fs.promises.readFile(filePathStock, "utf-8");
+    let produseStoc = eval(stockData.replace("export default", "").trim()); // Convertim în obiect
 
     const productIndex = produseStoc.findIndex(
-      (item) => item.cod === produs.cod
+      (item) => item.codbara === produs.codbara
     );
-
     if (productIndex !== -1) {
+      // Verificăm dacă avem suficient stoc
+      const availableQuantity = produseStoc[productIndex].cantitate;
+      if (availableQuantity < parseInt(produs.cantitate, 10)) {
+        return res.status(400).json({
+          message: `Stoc insuficient pentru produsul ${produs.denumire}. Disponibil: ${availableQuantity}.`,
+        });
+      }
+
+      // Actualizăm stocul
       produseStoc[productIndex].cantitate -= parseInt(produs.cantitate, 10);
+
       const updatedStock = `const stoc = ${JSON.stringify(
         produseStoc,
         null,
@@ -214,13 +268,36 @@ app.post("/adaugaBon", async (req, res) => {
         .json({ message: "Produsul nu a fost găsit în stoc." });
     }
 
-    // 🔹 Salvăm bonul actualizat
+    // 🔹 Dacă bonul nu are ID, îi generăm unul nou
+    if (!bon.id) {
+      const __filenameCounter = fileURLToPath(import.meta.url);
+      const __dirnameCounter = path.dirname(__filenameCounter);
+      const filePathCounter = path.join(__dirnameCounter, "counter.js");
+
+      // Citim counter-ul și îl actualizăm
+      const counterData = await fs.promises.readFile(filePathCounter, "utf-8");
+      const counter = eval(counterData.replace("export default", "").trim()); // Convertim în obiect
+      counter.bonId += 1;
+      bon.id = counter.bonId;
+
+      // Salvăm counter-ul actualizat
+      const updatedCounter = `const counter = ${JSON.stringify(
+        counter,
+        null,
+        2
+      )};\n\nexport default counter;`;
+      await fs.promises.writeFile(filePathCounter, updatedCounter);
+    }
+
+    // Salvăm bonul actualizat
     const updatedBon = `const bon = ${JSON.stringify(
       bon,
       null,
       2
     )};\n\nexport default bon;`;
     await fs.promises.writeFile(filePathBon, updatedBon);
+
+    console.log("Bon actualizat:", bon);
 
     return res.status(200).json({ message: "Produs adăugat cu succes!", bon });
   } catch (error) {
@@ -242,11 +319,58 @@ app.get("/bon", async (req, res) => {
     const mod = await import(bonModuleUrl + "?update=" + Date.now());
 
     res.json(mod.default); // Trimite obiectul bon ca JSON
+    console.log(mod.default);
   } catch (error) {
     console.error("Eroare la citirea bonului:", error);
     res.status(500).json({ message: "Eroare la obținerea bonului." });
   }
 });
+
+app.post("/actualizeazaBon", async (req, res) => {
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+  const filePathBon = path.join(__dirname, "bon.js");
+
+  const bon = req.body;
+
+  const bonData = `const bon = ${JSON.stringify(
+    bon,
+    null,
+    2
+  )};\n\nexport default bon;`;
+  await fs.promises.writeFile(filePathBon, bonData);
+
+  const __filenameBonuriSalvate = fileURLToPath(import.meta.url);
+  const __dirnameBonuriSalvate = path.dirname(__filenameBonuriSalvate);
+  const filePathBonuriSalvate = path.join(
+    __dirnameBonuriSalvate,
+    "bonurisalvate.js"
+  );
+
+  const bonGasitBonuriSalvate = bonuriSalvate.find((b) => b.id === bon.id);
+
+  let bonuriSalvateNew = [];
+
+  if (bonGasitBonuriSalvate) {
+    // Dacă găsim bonul, îl ștergem din lista bonurilor salvate
+    bonuriSalvateNew = bonuriSalvate.filter((b) => b.id !== bon.id);
+    console.log("Bonul a fost șters din bonuriSalvate:", bon);
+  } else {
+    console.log("Bonul nu a fost găsit în bonuriSalvate.");
+  }
+
+  const updatedBonuriData = `const bonuriSalvate = ${JSON.stringify(
+    bonuriSalvateNew,
+    null,
+    2
+  )};\n\nexport default bonuriSalvate;`;
+  await fs.promises.writeFile(filePathBonuriSalvate, updatedBonuriData);
+
+  res.status(200).json({
+    message: "Bonul a fost actualizat cu succes si sters din bonuri salvate!",
+  });
+});
+
 app.get("/bonurisalvate", async (req, res) => {
   try {
     const __filenameBonSalvat = fileURLToPath(import.meta.url);
@@ -277,41 +401,39 @@ app.post("/adaugaBonSalvat", async (req, res) => {
   const __dirnameBon = path.dirname(__filenameBon);
   const filePathBon = path.join(__dirnameBon, "bon.js");
 
-  const __filenameMasini = fileURLToPath(import.meta.url);
-  const __dirnameMasini = path.dirname(__filenameMasini);
-
   try {
     // Get the bon from the request body
     const bon = req.body;
 
-    // Load existing bons from bonurisalvate.js, or initialize an empty array if not found
-    bonuriSalvate.push(bon);
+    const existingBonIndex = bonuriSalvate.findIndex(
+      (existing) => existing.id === bon.id && existing.masina === bon.masina
+    );
 
-    const filePathMasini = path.join(__dirnameMasini, "masini.js");
+    if (existingBonIndex !== -1) {
+      // Dacă bonul există, înlocuim bonul existent cu cel nou
+      let bonuriSalvateFaraAsta = bonuriSalvate.filter((b) => b.id !== bon.id);
 
-    const masinaBon = masini.find((p) => p.numar === bon.masina);
+      bonuriSalvateFaraAsta.push(bon);
 
-    if (masinaBon !== -1) {
-      masinaBon.disponibilitate = 0;
-      const updatedMasini = `const stoc = ${JSON.stringify(
-        masini,
+      const updatedBonDataDada = `const bonurisalvate = ${JSON.stringify(
+        bonuriSalvateFaraAsta,
         null,
         2
-      )};\n\nexport default stoc;`;
-      await fs.promises.writeFile(filePathMasini, updatedMasini);
+      )};\n\nexport default bonurisalvate;`;
+      await fs.promises.writeFile(filePathBonAdauga, updatedBonDataDada);
     } else {
-      return res
-        .status(400)
-        .json({ message: "Produsul nu a fost găsit în stoc." });
-    }
+      // Dacă bonul nu există, îl adăugăm la listă
+      let bonuriSavaltaPula = bonuriSalvate;
+      bonuriSavaltaPula.push(bon);
+      const updatedBonData = `const bonurisalvate = ${JSON.stringify(
+        bonuriSavaltaPula,
+        null,
+        2
+      )};\n\nexport default bonurisalvate;`;
+      await fs.promises.writeFile(filePathBonAdauga, updatedBonData);
 
-    // Save the updated array of saved bons back to bonurisalvate.js (without `export default`)
-    const updatedBonData = `const bonurisalvate = ${JSON.stringify(
-      bonuriSalvate,
-      null,
-      2
-    )};\n\nexport default bonurisalvate;`;
-    await fs.promises.writeFile(filePathBonAdauga, updatedBonData);
+      console.log("VREAU SA VAD BONURILE SALVATE", bonuriSalvate);
+    }
 
     // Reset the current bon in bon.js to an empty state
     const resetBon = { id: null, masina: null, produse: [] };
@@ -329,6 +451,10 @@ app.post("/adaugaBonSalvat", async (req, res) => {
       message: "Bon salvat cu succes.",
       bon: resetBon, // Send the reset bon back
     });
+
+    console.log("bonul primit de la masina este", bon);
+    console.log("BONURILE SALVATE SUNT ", bonuriSalvate);
+    console.log("BONURILE FINALIZATE SUNT", bonuriFinalizate);
   } catch (error) {
     console.error("Error saving bon:", error);
     res.status(500).json({ message: "Server error. Please try again." });
@@ -371,18 +497,55 @@ app.post("/adaugaBonFinalizat", async (req, res) => {
 
     await fs.promises.writeFile(filePathBon, resetBonData); // Reset the current bon.js
 
+    const filePathBonuriSalvate = path.join(
+      __dirnameBonAdauga,
+      "bonurisalvate.js"
+    );
+
+    let bonuriSalvateFaraAsta = bonuriSalvate.filter(
+      (b) => b.masina !== bon.masina
+    );
+
+    const updatedBonSalvateData = `const bonuriSalvate = ${JSON.stringify(
+      bonuriSalvateFaraAsta,
+      null,
+      2
+    )};\n\nexport default bonuriSalvate;`;
+
+    await fs.promises.writeFile(filePathBonuriSalvate, updatedBonSalvateData);
+
     res.json({
       message: "Bon finalizat cu succes.",
       bon: resetBon, // Send the reset bon back
     });
+
+    console.log("bonul primit de la masina este", bon);
+    console.log("BONURILE SALVATE SUNT ", bonuriSalvate);
+    console.log("BONURILE FINALIZATE SUNT", bonuriFinalizate);
   } catch (error) {
     console.error("Error saving bon:", error);
     res.status(500).json({ message: "Server error. Please try again." });
   }
 });
 
-app.get("/bonurifinalizate", (req, res) => {
-  res.send(bonuriFinalizate);
+app.get("/bonurifinalizate", async (req, res) => {
+  try {
+    const __filenameBonFinalizat = fileURLToPath(import.meta.url);
+    const __dirnameBonFinalziat = path.dirname(__filenameBonFinalizat);
+    const filePathBonFinalizat = path.join(
+      __dirnameBonFinalziat,
+      "bonurifinalizate.js"
+    );
+
+    // Read bon.js dynamically instead of using import (avoids caching issue)
+    const bonData = await fs.promises.readFile(filePathBonFinalizat, "utf-8");
+    const bonuriFinalizate = eval(bonData.replace("export default", "").trim());
+
+    res.json(bonuriFinalizate);
+  } catch (error) {
+    console.error("Error reading bon.js:", error);
+    res.status(500).json({ message: "Error fetching bon data." });
+  }
 });
 
 app.delete("/bon/:bonId/produs/:cod", async (req, res) => {
@@ -498,11 +661,10 @@ app.delete("/bon/:bonId/produs/:cod", async (req, res) => {
   }
 });
 
-app.delete("/bonCurent/produs/:cod", async (req, res) => {
-  const { cod } = req.params;
-  const parsedCod = parseInt(cod);
+app.delete("/bonCurent/produs/:codbara", async (req, res) => {
+  const { codbara } = req.params;
 
-  console.log(parsedCod);
+  console.log(codbara);
 
   try {
     // Define file paths
@@ -516,10 +678,15 @@ app.delete("/bonCurent/produs/:cod", async (req, res) => {
     const bonData = await fs.promises.readFile(bonFilePath, "utf-8");
     let bonCurent = eval(bonData.replace("export default", "").trim()); // bonCurent este deja bonul curent!
 
+    const stockData = await fs.promises.readFile(stockFilePath, "utf-8");
+    let produseStoc = eval(stockData.replace("export default", "").trim());
+
     console.log("Before delete", bonCurent);
 
     // Găsim produsul de șters
-    const productToRemove = bonCurent.produse.find((p) => p.cod === parsedCod);
+    const productToRemove = bonCurent.produse.find(
+      (p) => p.codbara === codbara
+    );
 
     if (!productToRemove) {
       return res
@@ -527,9 +694,15 @@ app.delete("/bonCurent/produs/:cod", async (req, res) => {
         .json({ message: "Produsul nu a fost găsit în bon." });
     }
 
+    console.log("Product sters este:", productToRemove);
+
     let produsStoc = produseStoc.find(
       (p) => p.codbara === productToRemove.codbara
     );
+
+    console.log("Produs stoc pentru sters este:", produsStoc.cantitate);
+    console.log("Produs sters cantitate este:", productToRemove.cantitate);
+
     if (produsStoc) {
       produsStoc.cantitate += productToRemove.cantitate;
     }
@@ -541,7 +714,7 @@ app.delete("/bonCurent/produs/:cod", async (req, res) => {
     )};\n\nexport default stoc;`;
     await fs.promises.writeFile(stockFilePath, updatedStock);
 
-    bonCurent.produse = bonCurent.produse.filter((p) => p.cod !== parsedCod);
+    bonCurent.produse = bonCurent.produse.filter((p) => p.codbara !== codbara);
     console.log("After delete", bonCurent);
 
     if (bonCurent.produse.length === 0) {
@@ -653,46 +826,6 @@ app.post("/bonurifinalizatesal", async (req, res) => {
   }
 });
 
-app.post("/incercarePost", (req, res) => {
-  const newProducts = req.body;
-
-  console.log("Produse primite din frontend:", newProducts);
-
-  if (!newProducts || newProducts.length === 0) {
-    return res.status(400).json({ message: "Nu au fost trimise produse!" });
-  }
-
-  // Adăugăm produsele noi fără a suprascrie
-  incercare.push(...newProducts);
-
-  console.log("Cum arata incercare: ", incercare);
-
-  const __filenameIncercare = fileURLToPath(import.meta.url);
-  const __dirnameIncercare = path.dirname(__filenameIncercare);
-  const filePathIncercare = path.join(__dirnameIncercare, "incercare.js");
-
-  const updatedIncercare = `const incercare = ${JSON.stringify(
-    incercare,
-    null,
-    2
-  )};\n\nexport default incercare;`;
-
-  console.log(
-    "Cum arată conținutul fișierului incercare.js:",
-    updatedIncercare
-  );
-
-  console.log("Mai sus este fisierul incercare");
-
-  fs.writeFileSync(filePathIncercare, updatedIncercare);
-
-  res.json({ message: "Produse adăugate cu succes!", incercare });
-});
-
-app.get("/incercareGet", (req, res) => {
-  res.json(incercare);
-});
-
 app.get("/bonfinalizat/:bonId", (req, res) => {
   const bonId = parseInt(req.params.bonId); // Extract from route parameters
 
@@ -760,6 +893,15 @@ app.delete("/stergebonactiv", async (req, res) => {
         .json({ message: "Bonul nu conține produse pentru a fi șters." });
     }
 
+    console.log("bonul ce urmeaza sa fie sters", bon);
+
+    const __filenameStoc = fileURLToPath(import.meta.url);
+    const __dirnameStoc = path.dirname(__filenameStoc);
+    const filePathStock = path.join(__dirnameStoc, "stoc.js");
+
+    const stockData = await fs.promises.readFile(filePathStock, "utf-8");
+    let produseStoc = eval(stockData.replace("export default", "").trim()); // Convertim în obiect
+
     // Iterează prin fiecare produs din bon și actualizează stocul
     bon.produse.forEach((produsBon) => {
       console.log("Produs bon:", produsBon);
@@ -778,9 +920,6 @@ app.delete("/stergebonactiv", async (req, res) => {
     });
 
     // Actualizează fișierul de stoc
-    const __filenameStoc = fileURLToPath(import.meta.url);
-    const __dirnameStoc = path.dirname(__filenameStoc);
-    const filePathStock = path.join(__dirnameStoc, "stoc.js");
 
     const updatedStock = `const stoc = ${JSON.stringify(
       produseStoc,
@@ -801,10 +940,14 @@ app.delete("/stergebonactiv", async (req, res) => {
       2
     )};\n\nexport default bon;`;
 
-    console.log("Bon reset data:", resetBonData);
+    console.log("Bon resetat:", resetBonData);
     await fs.promises.writeFile(filePathBon, resetBonData); // Resetează bonul activ
 
     res.json("Bon sters cu succes!");
+
+    console.log("bonul primit de la masina este", bon);
+    console.log("BONURILE SALVATE SUNT ", bonuriSalvate);
+    console.log("BONURILE FINALIZATE SUNT", bonuriFinalizate);
   } catch (error) {
     console.error("Eroare la ștergerea bonului:", error);
     res.status(500).json({ message: "Eroare la ștergerea bonului." });
@@ -813,7 +956,146 @@ app.delete("/stergebonactiv", async (req, res) => {
 
 app.get("/bonuriSalvate/car", async (req, res) => {
   const carnumar = req.query.masina;
+
+  console.log(" NUMAR MASINA", carnumar);
+
+  // Căutăm bonul cu numărul mașinii primit
   const bon = bonuriSalvate.find((bon) => bon.masina === carnumar);
+
+  console.log(" BON GASIT", bon);
+
+  if (!bon) {
+    return res.status(404).json({ message: "Bonul nu a fost găsit." });
+  }
+
+  const index = bonuriSalvate.findIndex((b) => b.masina === carnumar);
+
+  if (index !== -1) {
+    // Dacă bonul există, folosește splice() pentru a-l elimina
+    bonuriSalvate.splice(index, 1);
+  }
+
+  // Filtrăm bonurile pentru a elimina bonul cu numărul mașinii dat
+
+  // Salvăm lista actualizată în fișierul bonurisalvate.js
+  const updatedBonSalvateData = `const bonurisalvate = ${JSON.stringify(
+    bonuriSalvate,
+    null,
+    2
+  )};\n\nexport default bonurisalvate;`;
+
+  try {
+    // Scriem fișierul actualizat
+    const __filenameBonAdauga = fileURLToPath(import.meta.url);
+    const __dirnameBonAdauga = path.dirname(__filenameBonAdauga);
+    const filePathBonuriSalvate = path.join(
+      __dirnameBonAdauga,
+      "bonurisalvate.js"
+    );
+
+    await fs.promises.writeFile(filePathBonuriSalvate, updatedBonSalvateData);
+
+    console.log(" BONURI SALVATE DUPA CE ACTUALIZAM FISIERUL", bonuriSalvate);
+
+    const updatedBonData = `const bon = ${JSON.stringify(
+      bon,
+      null,
+      2
+    )};\n\nexport default bon;`;
+    const filePathBon = path.join(__dirnameBonAdauga, "bon.js");
+
+    await fs.promises.writeFile(filePathBon, updatedBonData);
+
+    // Trimitem răspunsul cu bonul șters
+    res.json({
+      message: "Bon șters cu succes.",
+      bon: bon,
+    });
+
+    console.log("Bonul șters este:", bon);
+    console.log("BONURILE SALVATE SUNT", bonuriSalvate);
+  } catch (error) {
+    console.error("Eroare la ștergerea bonului:", error);
+    res.status(500).json({ message: "Eroare la server. Încearcă din nou." });
+  }
+});
+
+app.delete("/stergeBonuri", async (req, res) => {
+  const { id, masina } = req.body;
+
+  try {
+    // Găsește bonurile care au același ID și mașină
+    const bonuriDeSters = bonuriSalvate.filter(
+      (bon) => bon.id === id && bon.masina === masina
+    );
+
+    console.log(bonuriDeSters.length);
+
+    if (bonuriDeSters.length === 0) {
+      return res
+        .status(200)
+        .json({ message: "Nu au fost găsite bonuri cu acest ID și mașină." });
+    }
+
+    // Șterge bonurile respective din lista
+    const bonuriSalvateActualizate = bonuriSalvate.filter(
+      (bon) => bon.id !== id || bon.masina !== masina
+    );
+    // Actualizează fișierul de bonuri salvate
+    const __filenameBonAdauga = fileURLToPath(import.meta.url);
+    const __dirnameBonAdauga = path.dirname(__filenameBonAdauga);
+    const filePathBonAdauga = path.join(__dirnameBonAdauga, "bonurisalvate.js");
+
+    const updatedBonData = `const bonurisalvate = ${JSON.stringify(
+      bonuriSalvateActualizate,
+      null,
+      2
+    )};\n\nexport default bonurisalvate;`;
+
+    await fs.promises.writeFile(filePathBonAdauga, updatedBonData);
+
+    res.status(200).json({ message: "Bonurile au fost șterse cu succes." });
+  } catch (error) {
+    console.error("Eroare la ștergerea bonurilor:", error);
+    res
+      .status(500)
+      .json({ message: "A apărut o eroare la ștergerea bonurilor." });
+  }
+});
+
+app.get("/bonurigestionate", async (req, res) => {
+  const bonurigestionate = [...bonuriFinalizate, ...bonuriSalvate];
+
+  const __filenameBonuriGestionate = fileURLToPath(import.meta.url);
+  const __dirnameBonuriGestionate = path.dirname(__filenameBonuriGestionate);
+  const bonuriGestionateFilePath = path.join(
+    __dirnameBonuriGestionate,
+    "bonurigestionate.js"
+  );
+
+  const updatedBonuriGestionate = `const bonurigestionate = ${JSON.stringify(
+    bonurigestionate,
+    null,
+    2
+  )};\n\nexport default bonurigestionate;`;
+  await fs.promises.writeFile(
+    bonuriGestionateFilePath,
+    updatedBonuriGestionate
+  );
+
+  res
+    .status(200)
+    .json({ message: "Bonuri gestionate luate", bonurigestionate });
+});
+
+app.get("/bongestionat/:bonId", (req, res) => {
+  const bonId = parseInt(req.params.bonId); // Extract from route parameters
+
+  const bon = bonurigestionate.find((bon) => bon.id === bonId);
+
+  if (!bon) {
+    return res.status(404).json({ error: "Bon not found" });
+  }
 
   res.json(bon);
 });

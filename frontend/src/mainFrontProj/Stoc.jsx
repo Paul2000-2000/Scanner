@@ -5,19 +5,25 @@ import { useNavigate } from 'react-router-dom';
 import * as XLSX from "xlsx";
 
 
+
 const Stoc = () => {
 
   const [produseStoc, setProduseStoc] = useState([]);
   const [filterText, setFilterText] = useState(''); 
   const [quantities, setQuantities] = useState({});
   const [bon, setBon] = useState({ id:null ,  masina: null, produse: [] });
+  const [bonuriSalvate, setbonuriSalvate]  = useState();
+  const [bonurifinalizate , setBonuriFinalizate] = useState();
   const [masini, setMasini] = useState([]);
   const [selectedCar, setSelectedCar] = useState(null);
+  const [previousCar, setPreviousCar] = useState(null);
   const navigate = useNavigate();
 
   const [searchText, setSearchText] = useState(""); 
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null);
+
+  
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -31,7 +37,6 @@ const Stoc = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
-
 
 
   const handleFileUpload = async (event) => {
@@ -82,10 +87,9 @@ const Stoc = () => {
 
 const handleVeziNomenclator = () =>{
   navigate('/nomenclator');
-}
+};
 
-
-  const fetchProdusStoc = async () => {
+const fetchProdusStoc = async () => {
     try {
         const response = await axios.get('http://localhost:8080/produseStoc');
         if (response.status === 200) 
@@ -97,10 +101,23 @@ const handleVeziNomenclator = () =>{
     }
 };
 
+const fetchBonuriSalvate = async () => {
+  try {
+    const response = await axios.get("http://localhost:8080/bonurisalvate");
+    setbonuriSalvate(response.data);
+  } catch {
+    alert('Failed to fetch data');
+  }
+};
 
-
-
-
+const fetchBonuriFinalizate = async () => {
+  try {
+    const response = await axios.get("http://localhost:8080/bonurifinalizate");
+    setBonuriFinalizate(response.data);
+  } catch {
+    alert('Failed to fetch data');
+  }
+};
 
 const fetchBon = async () => {
   try {
@@ -132,68 +149,109 @@ const fetchBon = async () => {
   }
 };
 
-
 const fetchBonSalvat = async (carNumber) => {
   try {
-    const response = await axios.get(`http://localhost:8080/bonuriSalvate/car`, {
+    const response = await axios.get("http://localhost:8080/bonuriSalvate/car", {
       params: { masina: carNumber },
     });
 
+
+    console.log("Răspunsul de la server:", response.data);
+
+
     if (response.status === 200) {
-      setBon(response.data);
+      if (response.data.bon) {
+        // Bon salvat găsit
+        console.log("Bon existent găsit:", response.data);
+        setBon(response.data.bon);
+      
+      } else {
+        // Nu există bon salvat, creează unul gol
+        console.log("Nu există bon salvat pentru această mașină. Creăm un bon nou.");
+        setBon({ id: null, masina: carNumber, produse: [] });
+      }
+      fetchBonuriSalvate();
     } else {
-      setBon({ id: null, masina: null, produse: [] });
+      console.error("Eroare la obținerea bonului salvat");
     }
   } catch (error) {
-    console.error("Error fetching saved bon:", error);
-    setBon({ id: null, masina: null, produse: [] });
+    console.log(error);
+    setBon({ id: null, masina: carNumber, produse: [] });
   }
 };
 
 
-
-
-  const fetchMasini = async () => {
+const fetchMasini = async () => {
     try {
         const response = await axios.get('http://localhost:8080/masini');
         if (response.status === 200) setMasini(response.data);  
     } catch (error) {
         console.error('Error fetching masini:', error);
     }
-  };
+};
 
-  const filteredCars = masini.filter(car =>
+const filteredCars = masini.filter(car =>
     (`${car.numar} ${car.marca}`).toLowerCase().includes(searchText.toLowerCase())
-  );
+);
 
+const handleSelectCar = async (car) => {
+    // Salvează mașina anterioară
+    setPreviousCar(selectedCar);
+    // Dacă există un bon activ cu produse și schimbăm mașina, trebuie salvat
+    if (bon.produse.length > 0 && selectedCar !== car.numar) {
+      try {
+        const response = await axios.post("http://localhost:8080/adaugaBonSalvat", {
+          id: bon.id,
+          masina: bon.masina,
+          produse: bon.produse,
+        });
+  
+        if (response.status === 200) {
+          alert(response.data.message);
+  
+          // Resetăm bonul după salvare
+          setBon({ id: null, masina: null, produse: [] });
+  
+          // Ștergem selecția curentă din localStorage
+          localStorage.removeItem('selectedCar');
 
-  const handleSelectCar = (car) => {
+          fetchProdusStoc();
+  
+          // Navigăm către altă pagină (opțional)
+          navigate('/stoc');
+        } else {
+          alert("Eroare: " + response.data.message);
+          return; // Dacă apare eroare, oprim execuția
+        }
+      } catch (error) {
+        console.error("Eroare la trimiterea formularului:", error);
+        alert("A apărut o problemă la trimiterea formularului. Încearcă din nou.");
+        return;
+      }
+    } else {
+      // Dacă nu sunt produse sau nu schimbăm mașina, resetăm bonul
+      setBon({ id: null, masina: null, produse: [] });
+  
+      // Ștergem selecția curentă din localStorage (doar dacă nu există produse)
+      localStorage.removeItem('selectedCar');
+    }
+    // Actualizăm selecția de mașină
     setSelectedCar(car.numar);
     setSearchText(`${car.numar} ${car.marca}`);
     setShowDropdown(false);
   
+    // Salvăm mașina selectată în localStorage
     localStorage.setItem("selectedCar", JSON.stringify(car));
   
-    // Fetch saved bon for the selected car
-    fetchBonSalvat(car.numar);
-  };
-
-
-  useEffect(() => {
-    // Check if there's a car in localStorage
-    const savedCar = localStorage.getItem('selectedCar');
-    if (savedCar) {
-      const car = JSON.parse(savedCar);
-      setSelectedCar(car.numar);
-      setSearchText(`${car.numar} ${car.marca}`);
-    }
-  }, []);
-
-
-
-  const handleStergeProdus = async (bonId, cod) => {
+    // Căutăm un bon salvat pentru această mașină
+   await fetchBonSalvat(car.numar);
+    //fetchBonuriSalvate();
+    console.log(bon);
+};
+  
+const handleStergeProdus = async (bonId, codbara) => {
     try {
-      const response = await axios.delete(`http://localhost:8080/bonCurent/produs/${cod}`);
+      const response = await axios.delete(`http://localhost:8080/bonCurent/produs/${codbara}`);
 
       console.log(selectedCar);
   
@@ -215,8 +273,9 @@ const fetchBonSalvat = async (carNumber) => {
     }
 };
 
+const handleSalveazaBon = async () => {
 
-  const handleSalveazaBon = async () => {
+   
 
     if (!bon || !bon.produse || bon.produse.length === 0) {
         alert('Nu ai produse!');
@@ -224,15 +283,26 @@ const fetchBonSalvat = async (carNumber) => {
     }
 
     try {
-        const response = await axios.post("http://localhost:8080/adaugaBonSalvat", {
-            id: bon.id,
-            masina: bon.masina,
-            produse: bon.produse
-        });
+      
+
+      const responseDelete = await axios.delete("http://localhost:8080/stergeBonuri", {
+        data: { id: bon.id, masina: bon.masina }
+      });
+  
+      if (responseDelete.status === 200) {
+        console.log('Bonurile vechi au fost șterse.');
+      } else {
+        console.log('Nu au fost găsite bonuri de șters.');
+      }
+
+
+
+        const response = await axios.post("http://localhost:8080/adaugaBonSalvat", bon);
 
         // Dacă salvarea este reușită, actualizăm UI-ul
         if (response.status === 200) {
             alert(response.data.message);
+            console.log("Bonul trimis pentru adăugare:", bon);
          
             setBon({ id: null, masina: null, produse: [] });
 
@@ -240,6 +310,11 @@ const fetchBonSalvat = async (carNumber) => {
             setSearchText('');
 
             localStorage.removeItem('selectedCar');
+            setPreviousCar(null);
+
+            fetchBon();
+            fetchBonuriSalvate();
+            fetchProdusStoc();
             
             navigate('/stoc'); // Navighează la altă pagină
 
@@ -250,9 +325,8 @@ const fetchBonSalvat = async (carNumber) => {
     } catch (error) {
         console.error("Error submitting form:", error);
         alert("Failed to submit. Please try again.");
-    }
+    } 
 };
-
 
 const handleFinalizeazaBon = async () => {
 
@@ -273,12 +347,20 @@ const handleFinalizeazaBon = async () => {
      
       if (response.status === 200) {
           alert(response.data.message);
+
+          console.log("Bonul trimis pentru adăugare:", bon);
           setBon({ id: null, masina: null, produse: [] });
+          console.log("Asa arata bonul dupa finalizare" , bon);
 
           setSelectedCar(null);
           setSearchText('');
+          
 
           localStorage.removeItem('selectedCar');
+
+          setPreviousCar(null);
+          fetchProdusStoc();
+         
           
           navigate('/stoc'); // Navighează la altă pagină
       } else {
@@ -301,16 +383,20 @@ const handleStergeBon = async () =>{
     if(response.status === 200)
       {
         alert('Bon sters cu succes');
+    
+
         
-
-
         setBon({ id: null, masina: null, produse: [] });
-        fetchProdusStoc();
+       
 
         setSelectedCar(null);
         setSearchText('');
 
         localStorage.removeItem('selectedCar');
+        setPreviousCar(null);
+
+       
+        fetchProdusStoc();
 
 
       }
@@ -319,21 +405,29 @@ const handleStergeBon = async () =>{
   } catch (error){
     alert('Bonul nu a putut fi sters' , error);
   }
-}
+};
    
-
   useEffect(() => {
     fetchProdusStoc();
-    fetchBon();
     fetchMasini();
+    fetchBonuriSalvate();
+    fetchBonuriFinalizate();
   }, []);
 
-  const handleFilterChange = (e) => {
+
+  useEffect(() =>{
+    console.log('Previous car este:' , previousCar);
+    console.log('Selected car este' , selectedCar);
+    console.log('Bonul este sub froma:' , bon)
+    console.log('Bonuri salvate sunt:' , bonuriSalvate);
+    console.log('Bonuri finalizate sunt:' , bonurifinalizate);
+
+    
+  } , [bon , previousCar , selectedCar , bonuriSalvate , bonurifinalizate] )
+
+const handleFilterChange = (e) => {
     setFilterText(e.target.value); 
 };
-
-
-
 
 const filteredProduse = produseStoc.filter(produs => {
   const denumire = String(produs.denumire || '').toLowerCase();
@@ -374,13 +468,48 @@ const handleAddProduct = async (produs) => {
     return;
   }
 
+
+    // Verificăm dacă bonul există sau trebuie creat unul nou
+    if (!bon.id) {
+      // Dacă bonul nu există, creăm un bon nou
+      setBon({
+        id: null,  // Vom aștepta să primim un ID de la server
+        masina: selectedCar,
+        produse: []
+      });
+    }
+
+
+    const now = new Date();
+
+    const day = now.getDate(); // Day of the month (1-31)
+const hours = now.getHours().toString().padStart(2, '0'); // Ensure 2-digit format
+const minutes = now.getMinutes().toString().padStart(2, '0'); // Ensure 2-digit format
+  
+    // Adăugăm produsul la bonul curent
+    const updatedProducts = [...bon.produse, {
+      denumire: produs.denumire,
+      cod: produs.cod,
+      codbara: produs.codbara,
+      cantitate: desiredQuantity,
+      timp: `${day}-${hours}:${minutes}` // Properly formatted time
+    }];
+  
+    // Actualizăm bonul cu noul produs
+    setBon(prevBon => ({
+      ...prevBon,
+      produse: updatedProducts
+    }));
+  
+
     // Verifică dacă datele sunt corecte înainte de a le trimite
     const requestData = {
       denumire: produs.denumire,
       cod: produs.cod,
       codbara: produs.codbara,
       cantitate: desiredQuantity,
-      masina: selectedCar
+      masina: selectedCar,
+      timp: `${day}-${hours}:${minutes}` // Properly formatted time
     };
 
   try {
@@ -398,8 +527,9 @@ const handleAddProduct = async (produs) => {
         setMasini(prevMasini => prevMasini.filter(car => car.numar !== selectedCar)); 
       }
 
-      fetchProdusStoc();
       fetchBon();
+      fetchProdusStoc();
+      
       
     } else {
       alert("Error: " + response.data.message);
@@ -410,21 +540,23 @@ const handleAddProduct = async (produs) => {
   }
 };
 
-    const handleVeziGestiune = () =>{
+const handleVeziGestiune = () =>{
       navigate('/gestiunebonuri');
-    }
+}
 
-    const handleVeziBonuriSalvate = () =>{
+const handleVeziBonuriSalvate = () =>{
         navigate('/bonurisalvate');
-    }
+        localStorage.removeItem('selectedCar');
+}
 
-    const handleVeziBonuriFinalizate = () =>{
+const handleVeziBonuriFinalizate = () =>{
         navigate('/bonurifinalizate');
-    }
+        localStorage.removeItem('selectedCar');
+}
 
-    const handleAdaugaProdus = () =>{
+const handleAdaugaProdus = () =>{
       navigate('/adauga-produs');
-  }
+}
 
 
   return (
@@ -539,6 +671,7 @@ const handleAddProduct = async (produs) => {
             <th>Cod</th>
             <th>Codbara</th>
             <th>Cantitate</th>
+            <th>Timp</th>
           </tr>
         </thead>
         <tbody>
@@ -548,8 +681,9 @@ const handleAddProduct = async (produs) => {
               <td>{produs.cod}</td>
               <td>{produs.codbara}</td>
               <td>{produs.cantitate}</td>
+              <td>{produs.timp}</td>
               <td>
-                <button onClick={() => handleStergeProdus(bon.id, produs.cod)}>Sterge produs</button>
+                <button onClick={() => handleStergeProdus(bon.id, produs.codbara)}>Sterge produs</button>
               </td>
             </tr>
           ))}
