@@ -88,7 +88,7 @@ const AdaugaProdus = () => {
 
                 if (response.status === 200) {
                     alert(`Stock updated for ${produs.denumire}`);
-                    fetchProdusStoc();
+                    setProduseStoc(response.data.updatedStock);
                     navigate('/');
 
                 } else {

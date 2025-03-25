@@ -1,10 +1,10 @@
-import './BonFinalizat.css';
+import './BonGestionat.css';
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate , useParams } from 'react-router-dom';
 
-const BonFinalizat = () => {
-    const [bon, setBon] = useState(); 
+const BonGestionat = () => {
+    const [bonGestionat, setBonGestionat] = useState(); 
     const navigate = useNavigate();
 
     const { id } = useParams();
@@ -12,10 +12,10 @@ const BonFinalizat = () => {
 
 
     // Fetch pentru bonul existent
-    const fetchBon = async () => {
+    const fetchBonGestionat = async () => {
         try {
-            const response = await axios.get(`http://localhost:8080/bonfinalizat/${id}`);
-            setBon(response.data);
+            const response = await axios.get(`http://localhost:8080/bongestionat/${id}`);
+            setBonGestionat(response.data);
         } catch {
             alert("Bon does not exist");
         }
@@ -23,21 +23,21 @@ const BonFinalizat = () => {
 
     // Folosim useEffect pentru a încărca bonul la început
     useEffect(() => {
-        fetchBon();
+        fetchBonGestionat();
     }, [id]);
 
 
 
-    const handleBackStoc = () =>{
-        navigate('/bonurifinalizate');
+    const handleBackGestiune = () =>{
+        navigate('/gestiunebonuri');
       }
       
 
     // Dacă bonul este încărcat, dar nu există, afisăm loading
-    if (!bon || (bon.produse && bon.produse.length === 0)) {
+    if (!bonGestionat || (bonGestionat.produse && bonGestionat.produse.length === 0)) {
         return (
             <div className="empty-bon-container">
-                <button className='back-button' onClick={handleBackStoc}>Back</button>
+                <button className='back-button' onClick={handleBackGestiune}>Back</button>
                 <div className="no-products-message">
                     <h3>Nu există produse în bon.</h3>
                 </div>
@@ -48,13 +48,13 @@ const BonFinalizat = () => {
     // Render-ul bonului
     return (
         <div className="bon">
-             <button className='back-button' onClick={handleBackStoc}>Back</button>
+             <button className='back-button' onClick={handleBackGestiune}>Back</button>
            
             
        
             
-             <p className='bon-info'>Id Bon : {bon.id}</p>
-             <p className='bon-info'>Masina : {bon.masina}</p>
+             <p className='bon-info'>Id Bon : {bonGestionat.id}</p>
+             <p className='bon-info'>Masina : {bonGestionat.masina}</p>
                 <table>
                     <thead>
                         <tr>
@@ -63,13 +63,11 @@ const BonFinalizat = () => {
                             <th>Codbara</th>
                             <th>Cantitate</th>
                             <th>Timp</th>
-
                         </tr>
                     </thead>
                     <tbody>
-                        {bon.produse.map((produs) => (
+                        {bonGestionat.produse.map((produs) => (
                             <tr key={produs.cod}>
-                                
                                 <td>{produs.denumire}</td>
                                 <td>{produs.cod}</td>
                                 <td>{produs.codbara}</td>
@@ -88,4 +86,4 @@ const BonFinalizat = () => {
     );
 };
 
-export default BonFinalizat;
+export default BonGestionat;
