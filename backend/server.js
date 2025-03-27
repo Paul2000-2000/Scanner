@@ -1100,6 +1100,44 @@ app.get("/bongestionat/:bonId", (req, res) => {
   res.json(bon);
 });
 
+app.post("/schimbaMasina", async (req, res) => {
+  const masina = req.body.masina; // Obținem mașina din request
+
+  console.log("masina primita din request este", masina);
+
+  const __filenameBon = fileURLToPath(import.meta.url);
+  const __dirnameBon = path.dirname(__filenameBon);
+  const filePathBon = path.join(__dirnameBon, "bon.js");
+
+  // Citim fișierul cu bonul curent
+  const bonData = await fs.promises.readFile(filePathBon, "utf-8");
+
+  // Evaluăm conținutul fișierului pentru a obține obiectul `bon`
+  let bon = eval(bonData.replace("export default", "").trim()); // Convertim în obiect
+
+  console.log("bonul inainte de modificare masinii este:", bon);
+
+  // Actualizăm mașina din obiectul bon
+  bon.masina = masina;
+
+  console.log("bonul dupa modificarea masinii este:", bon);
+
+  // Cream un nou conținut pentru fișierul bon.js cu mașina schimbată
+  const updatedBon = `const bon = ${JSON.stringify(
+    bon,
+    null,
+    2
+  )};\n\nexport default bon;`;
+
+  // Scriem fișierul actualizat
+  await fs.promises.writeFile(filePathBon, updatedBon);
+
+  // Răspuns către client
+  res
+    .status(200)
+    .send({ message: "Mașina a fost schimbată cu succes", bon: bon });
+});
+
 app.listen(8080, () => {
   console.log("Server is running on port 8080");
 });

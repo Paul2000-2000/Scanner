@@ -80,6 +80,12 @@
   box-shadow: 0 2px 5px rgba(0, 123, 255, 0.2);
 }
 
+.schimbacarinput {
+  text-align: center; /* Aliniază textul în mijlocul inputului */
+  font-size: 16px;
+  align-self: center;
+}
+
 .car-input:focus {
   border-color: #0056b3;
   box-shadow: 0 3px 7px rgba(0, 123, 255, 0.4);
@@ -280,6 +286,8 @@ button:hover {
   background-color: #fff;
   padding: 20px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+
+  
 }
 
 .bon-info {

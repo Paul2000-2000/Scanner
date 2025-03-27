@@ -196,19 +196,6 @@ const bonurigestionate = [
     ]
   },
   {
-    "id": 46,
-    "masina": "AR78DEF",
-    "produse": [
-      {
-        "denumire": "POMPA ALIMENTARE MOTORINA",
-        "cod": "68461",
-        "codbara": "400000010021",
-        "cantitate": 1,
-        "timp": "24-18:34"
-      }
-    ]
-  },
-  {
     "id": 40,
     "masina": "AR25ABC",
     "produse": [

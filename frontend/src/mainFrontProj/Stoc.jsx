@@ -3,11 +3,13 @@ import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import * as XLSX from "xlsx";
+import { useLocation } from 'react-router-dom';
 
 
+const Stoc = ( ) => {
 
-const Stoc = () => {
 
+  const location = useLocation(); // Obține locația curentă
   const [produseStoc, setProduseStoc] = useState([]);
   const [filterText, setFilterText] = useState(''); 
   const [quantities, setQuantities] = useState({});
@@ -15,13 +17,19 @@ const Stoc = () => {
   const [bonuriSalvate, setbonuriSalvate]  = useState();
   const [bonurifinalizate , setBonuriFinalizate] = useState();
   const [masini, setMasini] = useState([]);
+  const [masiniSchimba,  setMasiniSchimba] =  useState([]);
   const [selectedCar, setSelectedCar] = useState(null);
   const [previousCar, setPreviousCar] = useState(null);
   const navigate = useNavigate();
 
   const [searchText, setSearchText] = useState(""); 
+  const [searchTextSchimba, setSearchTextSchimba] = useState(""); 
+
+
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showDropdownSchimba, setShowDropdownSchimba ] = useState(false);
   const dropdownRef = useRef(null);
+  const dropdownChangeRef= useRef(null);
 
   
 
@@ -29,6 +37,20 @@ const Stoc = () => {
     function handleClickOutside(event) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowDropdown(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownChangeRef.current && !dropdownChangeRef.current.contains(event.target)) {
+        setShowDropdownSchimba(false);
       }
     }
 
@@ -129,17 +151,32 @@ const fetchBon = async () => {
       // Verifică dacă răspunsul este valid
       const bonData = response.data || { id: null, masina: null, produse: [] }; // Default object if null
 
-
       if (!bonData || bonData.produse.length === 0) {
         setSelectedCar(null);
         setSearchText('');
         localStorage.removeItem('selectedCar');
+      } else {
+        // Dacă există mașină, setează numărul mașinii
+        if (bonData.masina) {
+          const carNumber = bonData.masina; // Sau bonData.masina.numar dacă structura are `numar` în loc de `masina`
+          setSelectedCar(carNumber);
+          setSearchText(carNumber);
+          localStorage.setItem('selectedCar', carNumber);  // Salvează doar numărul mașinii
+        } else {
+          // Dacă nu există mașină în răspuns, șterge datele
+          setSelectedCar(null);
+          setSearchText('');
+          localStorage.removeItem('selectedCar');
+        }
       }
+    
       
       setBon({
         ...bonData,
         produse: bonData.produse || [], // Asigură-te că `produse` este mereu un array
       });
+
+      console.log(bon);
 
     } else {
       console.error(`Error fetching data: ${response.status}`);
@@ -184,7 +221,11 @@ const fetchBonSalvat = async (carNumber) => {
 const fetchMasini = async () => {
     try {
         const response = await axios.get('http://localhost:8080/masini');
-        if (response.status === 200) setMasini(response.data);  
+        if (response.status === 200)
+          { 
+          setMasini(response.data);
+          setMasiniSchimba(response.data);
+          } 
     } catch (error) {
         console.error('Error fetching masini:', error);
     }
@@ -192,6 +233,10 @@ const fetchMasini = async () => {
 
 const filteredCars = masini.filter(car =>
     (`${car.numar} ${car.marca}`).toLowerCase().includes(searchText.toLowerCase())
+);
+
+const filteredCarsSchimba = masiniSchimba.filter(car =>
+  searchTextSchimba ? (`${car.numar} ${car.marca}`).toLowerCase().includes(searchTextSchimba.toLowerCase()) : true
 );
 
 const handleSelectCar = async (car) => {
@@ -242,12 +287,62 @@ const handleSelectCar = async (car) => {
   
     // Salvăm mașina selectată în localStorage
     localStorage.setItem("selectedCar", JSON.stringify(car));
+    localStorage.setItem("searchText", `${car.numar} ${car.marca}`);
   
     // Căutăm un bon salvat pentru această mașină
    await fetchBonSalvat(car.numar);
     //fetchBonuriSalvate();
     console.log(bon);
 };
+
+const handleChangeCar  = async ( car ) =>{
+
+  console.log('Masina schimba ar numarul' , car.numar);
+
+  setSearchTextSchimba(car.numar); // Sau orice alt atribut care reprezintă mașina (de exemplu, car.marca)
+  setShowDropdownSchimba(false);  // Închide dropdown-ul
+
+
+
+  try {
+   
+    const response = await axios.post("http://localhost:8080/schimbaMasina", {
+      masina: car.numar,  // Trimite valoarea selectată din input
+    });
+
+    if (response.status === 200) {
+      alert(response.data.message);
+
+      // Resetăm bonul după salvare
+      setBon({ id: bon.id, masina: searchTextSchimba, produse: bon.produse });
+
+      setSelectedCar(car.numar);
+      setSearchText(`${car.numar} ${car.marca}`);
+      setSearchTextSchimba("");
+
+      
+      localStorage.setItem("selectedCar", JSON.stringify(car));
+      localStorage.setItem("searchText", `${car.numar} ${car.marca}`);
+
+      
+      fetchBon();
+  
+      // Navigăm către altă pagină (opțional)
+      navigate('/stoc');
+    } else {
+      alert("Eroare: " + response.data.message);
+      return; // Dacă apare eroare, oprim execuția
+    }
+  } catch (error) {
+    console.error("Eroare la trimiterea formularului:", error);
+    alert("A apărut o problemă la trimiterea formularului. Încearcă din nou.");
+    return;
+  }
+
+
+
+
+}
   
 const handleStergeProdus = async (bonId, codbara) => {
     try {
@@ -406,24 +501,66 @@ const handleStergeBon = async () =>{
     alert('Bonul nu a putut fi sters' , error);
   }
 };
-   
+
+useEffect(() => {
+  //  Apelăm fetchBon la fiecare schimbare de locație (adică când revii pe pagina respectivă)
+ fetchBon();
+
+  // Dacă ai bon disponibil, salvează doar numărul mașinii
+  if (bon && bon.masina) {
+    localStorage.setItem("selectedCar", bon.masina);  // Salvează doar numărul mașinii
+  }
+
+}, [location]); // Depinde de locația curentă
+
+const handleSearchChange = (e) => {
+  const newSearchText = e.target.value;
+  setSearchText(newSearchText);
+  setShowDropdown(true);
+  localStorage.setItem("searchText", newSearchText);  // Salvează valoarea în localStorage
+};
+
+useEffect(() => {
+  console.log("Current location pathname: ", location.pathname);  // Verifică dacă pathname-ul se schimbă
+
+  const savedSearchText = localStorage.getItem('searchText');
+  const savedSelectedCar = localStorage.getItem('selectedCar');
+
+  console.log("Saved selectedCar from localStorage:", savedSelectedCar); // Verifică ce se salvează
+
+  if (savedSearchText) {
+    setSearchText(savedSearchText);  // Setează searchText din localStorage
+  }
+
+  if (savedSelectedCar) {
+    setSelectedCar(savedSelectedCar);  // Setează doar numărul mașinii
+  }
+
+}, [location]); // Când locația se schimbă, recuperează valoarea
+
+
+
+
   useEffect(() => {
     fetchProdusStoc();
     fetchMasini();
     fetchBonuriSalvate();
     fetchBonuriFinalizate();
+    
   }, []);
 
 
   useEffect(() =>{
+    console.log('Search text este ' , searchText);
     console.log('Previous car este:' , previousCar);
     console.log('Selected car este' , selectedCar);
     console.log('Bonul este sub froma:' , bon)
     console.log('Bonuri salvate sunt:' , bonuriSalvate);
     console.log('Bonuri finalizate sunt:' , bonurifinalizate);
+    console.log('locatie este' , location.pathname);
 
     
-  } , [bon , previousCar , selectedCar , bonuriSalvate , bonurifinalizate] )
+  } , [bon , previousCar , selectedCar , bonuriSalvate , bonurifinalizate ,  location] )
 
 const handleFilterChange = (e) => {
     setFilterText(e.target.value); 
@@ -558,6 +695,10 @@ const handleAdaugaProdus = () =>{
       navigate('/adauga-produs');
 }
 
+const handleSearchChangeSchimba = ( ) =>{
+
+}
+
 
   return (
     <div className='stoc-produse'>
@@ -588,10 +729,7 @@ const handleAdaugaProdus = () =>{
         type="text"
         placeholder="Selecteaza masina"
         value={searchText}
-        onChange={(e) => {
-          setSearchText(e.target.value);
-          setShowDropdown(true); 
-        }}
+        onChange={handleSearchChange}  // Folosește handler-ul pentru schimbarea textului
         onFocus={() => setShowDropdown(true)} // Show dropdown when input is focused
         className="car-input"
       />
@@ -664,6 +802,26 @@ const handleAdaugaProdus = () =>{
     <>
       <p className='bon-info'>Id Bon : {bon.id}</p>
       <p className='bon-info'>Masina : {bon.masina}</p>
+      <div className="car-selector" ref={dropdownChangeRef}>
+      <input
+        type="text"
+        placeholder="Schimba masina"
+        value={searchTextSchimba}
+        onChange={handleSearchChangeSchimba}  // Folosește handler-ul pentru schimbarea textului
+        onFocus={() => setShowDropdownSchimba(true)} // Show dropdown when input is focused
+        className="schimbacarinput"
+      />
+
+{showDropdownSchimba && filteredCarsSchimba.length > 0 && (
+    <ul className="car-dropdown">
+      {filteredCarsSchimba.map(car => (
+        <li key={car.id} onClick={() => handleChangeCar(car)} className='car-item'> 
+          {car.numar} {car.marca}
+        </li>
+      ))}
+    </ul>
+  )}
+  </div>
       <table>
         <thead>
           <tr>
