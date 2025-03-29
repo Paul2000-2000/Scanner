@@ -36,7 +36,7 @@ const GestiuneBonuri = () => {
     const fetchBonuriGestionate = async () => {
         try {
           const response = await axios.get("http://localhost:8080/bonurigestionate");
-          setBonuriGestionate(response.data.bonurigestionate);
+          setBonuriGestionate(response.data);
           console.log(response.data);
           console.log(bonuriGestionate);
         } catch {
@@ -56,19 +56,22 @@ const GestiuneBonuri = () => {
 
       const filteredBonuri = bonuriGestionate.filter((bon) => {
         const matchesId = filterId ? bon.id.toString().includes(filterId) : true;
-        const matchesMasina = filterMasina ? bon.masina.toLowerCase().includes(filterMasina.toLowerCase()) : true; // 🔥 Verificăm dacă mașina corespunde
-        const matchesProduse = bon.produse.some((produs) => {
+        const matchesMasina = filterMasina ? bon.masina.toLowerCase().includes(filterMasina.toLowerCase()) : true;
+      
+        // Filtrarea produselor în cadrul fiecărui bon
+        const filteredProduse = bon.produse.filter((produs) => {
           const denumire = String(produs.denumire || '').toLowerCase();
           const cod = String(produs.cod || '').toLowerCase();
           const codbara = String(produs.codbara || '').toLowerCase();
           const filterTextLower = filterText.toLowerCase();
-    
+      
+          // Verificăm dacă produsul conține textul de căutare
           return denumire.includes(filterTextLower) ||
                  cod.includes(filterTextLower) ||
                  codbara.includes(filterTextLower);
         });
-    
-        return matchesId && matchesMasina && matchesProduse;
+      
+        return matchesId && matchesMasina && filteredProduse.length > 0; // Filtrăm bonurile pentru a avea produse corespunzătoare
       });
 
   return (
@@ -107,6 +110,7 @@ const GestiuneBonuri = () => {
               <tr>
                 <th>ID Bon</th>
                 <th>Masina</th>
+                <th>Detalii bon</th>
               </tr>
             </thead>
             <tbody>
@@ -114,6 +118,29 @@ const GestiuneBonuri = () => {
                 <tr key={bon.id}>
                   <td>{bon.id}</td>
                   <td>{bon.masina}</td>
+                  <td>
+                      {/* Verificăm dacă există text de căutare în input */}
+  {filterText && (
+    <div>
+      {/* Filtrăm produsele pentru a arăta doar cele care se potrivesc */}
+      {bon.produse
+        .filter(produs =>
+          (produs.denumire && produs.denumire.toLowerCase().includes(filterText.toLowerCase())) ||
+          (produs.cod && produs.cod.toLowerCase().includes(filterText.toLowerCase())) ||
+          (produs.codbara && produs.codbara.toLowerCase().includes(filterText.toLowerCase()))
+        )
+        .map(produs => (
+          <div key={produs.codbara}>
+            {/* Afișăm denumirea produsului, codul și codul de bare */}
+            <p>{produs.denumire}</p>
+            <p>{produs.codbara}</p>
+            <p>{produs.cod}</p>
+          </div>
+        ))
+      }
+    </div>
+  )}
+                  </td>
                   <td>
                     <button onClick={() => handleVeziBon(bon.id)}>Vezi bon</button>
                   </td>

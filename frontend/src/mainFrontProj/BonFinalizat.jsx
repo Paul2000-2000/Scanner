@@ -45,12 +45,33 @@ const BonFinalizat = () => {
         );
     }
 
-    // Render-ul bonului
+
+    const handleSaveExcelBon  = async ( bon ) =>{
+
+        try{
+      
+          const response = await axios.post('http://localhost:8080/savetoexcelBon' , bon );
+      
+          if (response.status === 200)
+            {
+                alert('Bon salvat cu succes in Excel');
+            } 
+            else{
+                alert('Salvarea a esuat');
+            }
+      
+        } catch(error) {
+          console.log(error);
+        }
+      
+      }
+
+   
     return (
         <div className="bon">
              <button className='back-button' onClick={handleBackStoc}>Back</button>
-           
-            
+             <button> Modifica </button>
+             <button onClick={() => handleSaveExcelBon(bon)} className='saveexcelbut'> Save to Excel </button>
        
             
              <p className='bon-info'>Id Bon : {bon.id}</p>
@@ -58,6 +79,7 @@ const BonFinalizat = () => {
                 <table>
                     <thead>
                         <tr>
+                            <th>Nr Curent Produs</th>
                             <th>Denumire</th>
                             <th>Cod</th>
                             <th>Codbara</th>
@@ -67,16 +89,16 @@ const BonFinalizat = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {bon.produse.map((produs) => (
-                            <tr key={produs.cod}>
-                                
-                                <td>{produs.denumire}</td>
-                                <td>{produs.cod}</td>
-                                <td>{produs.codbara}</td>
-                                <td>{produs.cantitate}</td>
-                                <td>{produs.timp}</td>
-                            </tr>
-                        ))}
+                    {bon.produse.map((produs, index) => (
+      <tr key={produs.cod}>
+        <td>{index + 1}</td> 
+        <td>{produs.denumire}</td>
+        <td>{produs.cod}</td>
+        <td>{produs.codbara}</td>
+        <td>{produs.cantitate}</td>
+        <td>{produs.timp}</td>
+      </tr>
+    ))}
                     </tbody>
                 </table>
     

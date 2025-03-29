@@ -312,6 +312,23 @@ button:hover {
   background-color: #f8f8f8;
   color: #555;
 }
+
+.saveexcelbut{
+  padding: 8px 15px;
+  background-color: black;
+  color: white;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+  font-size: 18px;
+  width: 255px;
+  height: 55px;
+  transition: background-color 0.3s;
+}
+
+.saveexcelbut:hover{
+  background:#0d76ff;
+}
   
   /* Responsive styling for smaller screens */
   @media (max-width: 768px) {

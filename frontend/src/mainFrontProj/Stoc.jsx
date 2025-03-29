@@ -699,6 +699,26 @@ const handleSearchChangeSchimba = ( ) =>{
 
 }
 
+const handleSaveExcel  = async ( produseStoc ) =>{
+
+  try{
+
+    const response = await axios.post('http://localhost:8080/savetoexcel' , produseStoc );
+
+    if (response.status === 200)
+      {
+          alert('Stoc salvat cu succes in Excel');
+      } 
+      else{
+          alert('Salvarea a esuat');
+      }
+
+  } catch(error) {
+    console.log(error);
+  }
+
+}
+
 
   return (
     <div className='stoc-produse'>
@@ -711,6 +731,7 @@ const handleSearchChangeSchimba = ( ) =>{
                     <button className="stoc-produse-btn" onClick={handleVeziBonuriFinalizate}>Bonuri finalizate</button>
                 </div>
 </nav>
+            <button onClick={() => handleSaveExcel(produseStoc)} className='saveexcelbut'> Save  to Excel </button>
             <h2> Produse Stoc </h2>
            
             <input 

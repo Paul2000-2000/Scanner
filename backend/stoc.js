@@ -4,14 +4,14 @@ const stoc = [
     "denumire": "POMPA ALIMENTARE MOTORINA",
     "cod": "68461",
     "codbara": "400000010021",
-    "cantitate": 4
+    "cantitate": 6
   },
   {
     "id": 2,
     "denumire": "ACUMULATORI PROMOTIVE SILVER",
     "cod": "680108100",
     "codbara": "400000010038",
-    "cantitate": 4
+    "cantitate": 5
   },
   {
     "id": 3,
@@ -31,7 +31,7 @@ const stoc = [
     "denumire": "CARCASA SCARA",
     "cod": "DT",
     "codbara": "400000010182",
-    "cantitate": 6
+    "cantitate": 7
   },
   {
     "id": 6,

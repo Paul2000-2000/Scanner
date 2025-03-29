@@ -1,5 +1,5 @@
 const counter = {
-  "bonId": 100
+  "bonId": 102
 };
 
 export default counter;
