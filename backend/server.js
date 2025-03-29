@@ -15,6 +15,7 @@ import bonurigestionate from "./bonurigestionate.js";
 import nomenclator from "./nomenclator.js";
 import bodyParser from "body-parser";
 import { time } from "console";
+import XLSX from "xlsx";
 
 const app = express();
 const corsOptions = {
@@ -397,6 +398,13 @@ app.post("/adaugaBonSalvat", async (req, res) => {
   const __dirnameBonAdauga = path.dirname(__filenameBonAdauga);
   const filePathBonAdauga = path.join(__dirnameBonAdauga, "bonurisalvate.js");
 
+  const __filenameBonGestionat = fileURLToPath(import.meta.url);
+  const __dirnameBonGestionat = path.dirname(__filenameBonGestionat);
+  const filePathBonGestionat = path.join(
+    __dirnameBonGestionat,
+    "bonurigestionate.js"
+  );
+
   const __filenameBon = fileURLToPath(import.meta.url);
   const __dirnameBon = path.dirname(__filenameBon);
   const filePathBon = path.join(__dirnameBon, "bon.js");
@@ -435,6 +443,15 @@ app.post("/adaugaBonSalvat", async (req, res) => {
       console.log("VREAU SA VAD BONURILE SALVATE", bonuriSalvate);
     }
 
+    bonurigestionate.push(bon);
+
+    const updatedBonuriGestionate = `const bonurigestionate = ${JSON.stringify(
+      bonurigestionate,
+      null,
+      2
+    )};\n\nexport default bonurigestionate;`;
+    await fs.promises.writeFile(filePathBonGestionat, updatedBonuriGestionate);
+
     // Reset the current bon in bon.js to an empty state
     const resetBon = { id: null, masina: null, produse: [] };
     const resetBonData = `const bon = ${JSON.stringify(
@@ -469,6 +486,13 @@ app.post("/adaugaBonFinalizat", async (req, res) => {
     "bonurifinalizate.js"
   );
   const filePathBon = path.join(__dirnameBonAdauga, "bon.js");
+
+  const __filenameBonGestionat = fileURLToPath(import.meta.url);
+  const __dirnameBonGestionat = path.dirname(__filenameBonGestionat);
+  const filePathBonGestionat = path.join(
+    __dirnameBonGestionat,
+    "bonurigestionate.js"
+  );
 
   try {
     // Get the bon from the request body
@@ -513,6 +537,15 @@ app.post("/adaugaBonFinalizat", async (req, res) => {
     )};\n\nexport default bonuriSalvate;`;
 
     await fs.promises.writeFile(filePathBonuriSalvate, updatedBonSalvateData);
+
+    bonurigestionate.push(bon);
+
+    const updatedBonuriGestionate = `const bonurigestionate = ${JSON.stringify(
+      bonurigestionate,
+      null,
+      2
+    )};\n\nexport default bonurigestionate;`;
+    await fs.promises.writeFile(filePathBonGestionat, updatedBonuriGestionate);
 
     res.json({
       message: "Bon finalizat cu succes.",
@@ -968,13 +1001,17 @@ app.get("/bonuriSalvate/car", async (req, res) => {
     return res.status(404).json({ message: "Bonul nu a fost găsit." });
   }
 
-  const index = bonuriSalvate.findIndex((b) => b.masina === carnumar);
+  const idBon = bon.id;
 
-  if (index !== -1) {
-    // Dacă bonul există, folosește splice() pentru a-l elimina
-    bonuriSalvate.splice(index, 1);
+  const indexSalvate = bonuriSalvate.findIndex((b) => b.id === idBon);
+  if (indexSalvate !== -1) {
+    bonuriSalvate.splice(indexSalvate, 1);
   }
 
+  const indexGestionate = bonurigestionate.findIndex((b) => b.id === idBon);
+  if (indexGestionate !== -1) {
+    bonurigestionate.splice(indexGestionate, 1);
+  }
   // Filtrăm bonurile pentru a elimina bonul cu numărul mașinii dat
 
   // Salvăm lista actualizată în fișierul bonurisalvate.js
@@ -983,6 +1020,12 @@ app.get("/bonuriSalvate/car", async (req, res) => {
     null,
     2
   )};\n\nexport default bonurisalvate;`;
+
+  const updatedBonuriGestionate = `const bonurigestionate = ${JSON.stringify(
+    bonurigestionate,
+    null,
+    2
+  )};\n\nexport default bonurigestionate;`;
 
   try {
     // Scriem fișierul actualizat
@@ -993,7 +1036,16 @@ app.get("/bonuriSalvate/car", async (req, res) => {
       "bonurisalvate.js"
     );
 
+    const __filenameBonGestionat = fileURLToPath(import.meta.url);
+    const __dirnameBonGestionat = path.dirname(__filenameBonGestionat);
+    const filePathBonGestionat = path.join(
+      __dirnameBonGestionat,
+      "bonurigestionate.js"
+    );
+
     await fs.promises.writeFile(filePathBonuriSalvate, updatedBonSalvateData);
+
+    await fs.promises.writeFile(filePathBonGestionat, updatedBonuriGestionate);
 
     console.log(" BONURI SALVATE DUPA CE ACTUALIZAM FISIERUL", bonuriSalvate);
 
@@ -1064,8 +1116,6 @@ app.delete("/stergeBonuri", async (req, res) => {
 });
 
 app.get("/bonurigestionate", async (req, res) => {
-  const bonurigestionate = [...bonuriFinalizate, ...bonuriSalvate];
-
   const __filenameBonuriGestionate = fileURLToPath(import.meta.url);
   const __dirnameBonuriGestionate = path.dirname(__filenameBonuriGestionate);
   const bonuriGestionateFilePath = path.join(
@@ -1073,19 +1123,10 @@ app.get("/bonurigestionate", async (req, res) => {
     "bonurigestionate.js"
   );
 
-  const updatedBonuriGestionate = `const bonurigestionate = ${JSON.stringify(
-    bonurigestionate,
-    null,
-    2
-  )};\n\nexport default bonurigestionate;`;
-  await fs.promises.writeFile(
-    bonuriGestionateFilePath,
-    updatedBonuriGestionate
-  );
+  const bonData = await fs.promises.readFile(bonuriGestionateFilePath, "utf-8");
+  const bonurigestionate = eval(bonData.replace("export default", "").trim());
 
-  res
-    .status(200)
-    .json({ message: "Bonuri gestionate luate", bonurigestionate });
+  res.json(bonurigestionate);
 });
 
 app.get("/bongestionat/:bonId", (req, res) => {
@@ -1100,6 +1141,144 @@ app.get("/bongestionat/:bonId", (req, res) => {
   res.json(bon);
 });
 
+app.post("/schimbaMasina", async (req, res) => {
+  const masina = req.body.masina; // Obținem mașina din request
+
+  console.log("masina primita din request este", masina);
+
+  const __filenameBon = fileURLToPath(import.meta.url);
+  const __dirnameBon = path.dirname(__filenameBon);
+  const filePathBon = path.join(__dirnameBon, "bon.js");
+
+  // Citim fișierul cu bonul curent
+  const bonData = await fs.promises.readFile(filePathBon, "utf-8");
+
+  // Evaluăm conținutul fișierului pentru a obține obiectul `bon`
+  let bon = eval(bonData.replace("export default", "").trim()); // Convertim în obiect
+
+  console.log("bonul inainte de modificare masinii este:", bon);
+
+  // Actualizăm mașina din obiectul bon
+  bon.masina = masina;
+
+  console.log("bonul dupa modificarea masinii este:", bon);
+
+  // Cream un nou conținut pentru fișierul bon.js cu mașina schimbată
+  const updatedBon = `const bon = ${JSON.stringify(
+    bon,
+    null,
+    2
+  )};\n\nexport default bon;`;
+
+  // Scriem fișierul actualizat
+  await fs.promises.writeFile(filePathBon, updatedBon);
+
+  // Răspuns către client
+  res
+    .status(200)
+    .send({ message: "Mașina a fost schimbată cu succes", bon: bon });
+});
+
+app.post("/savetoexcel", async (req, res) => {
+  const stocToExcel = req.body;
+
+  try {
+    // Verifică dacă sunt date valide
+    if (!Array.isArray(stocToExcel) || stocToExcel.length === 0) {
+      return res.status(400).json({ message: "Datele nu sunt valide!" });
+    }
+
+    // Creăm datele pentru Excel
+    const header = [["Denumire", "Cod", "Cod de Bare", "Cantitate"]];
+    const data = stocToExcel.map((item) => [
+      item.denumire || "N/A",
+      item.cod || "N/A",
+      item.codbara || "N/A",
+      item.cantitate || 0,
+    ]);
+
+    // Creăm un nou workbook și sheet
+    const ws = XLSX.utils.aoa_to_sheet([...header, ...data]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Stoc");
+
+    // Salvează fișierul Excel în server
+
+    const __filenameSaveToExcel = fileURLToPath(import.meta.url);
+    const __dirnameSaveToExcel = path.dirname(__filenameSaveToExcel);
+
+    const filePath = path.join(__dirnameSaveToExcel, "stoc.xlsx");
+
+    XLSX.writeFile(wb, filePath);
+
+    res.download(filePath, "stoc.xlsx", (err) => {
+      if (err) {
+        console.error("Eroare la trimiterea fișierului:", err);
+        res.status(500).json({ message: "Eroare la descărcare!" });
+      }
+    });
+  } catch (error) {
+    console.error("Eroare server:", error);
+    res.status(500).json({ message: "Eroare server!" });
+  }
+});
+
+app.post("/savetoexcelBon", async (req, res) => {
+  const bonToExcel = req.body;
+
+  try {
+    // Verificăm dacă sunt date valide
+    if (!bonToExcel.id || !bonToExcel.masina || !bonToExcel.produse) {
+      return res.status(400).json({ message: "Date incomplete!" });
+    }
+
+    // Extragem datele
+    const idBon = bonToExcel.id;
+    const masina = bonToExcel.masina;
+    const produse = bonToExcel.produse; // lista de produse
+
+    // Setăm header-ul pentru datele de produse
+    const header = [["Denumire", "Cod", "Cod de Bare", "Cantitate"]];
+
+    // Creăm datele pentru produse
+    const data = produse.map((item) => [
+      item.denumire || "N/A", // dacă denumirea este goală, se pune "N/A"
+      item.cod || "N/A", // la fel pentru cod
+      item.codbara || "N/A", // la fel pentru codul de bare
+      item.cantitate || 0, // dacă cantitatea este goală, se pune 0
+    ]);
+
+    // Creăm un nou workbook și sheet
+    const ws = XLSX.utils.aoa_to_sheet([
+      ["Id Bon:", idBon], // Adăugăm id-ul bonului
+      ["Număr Mașină:", masina], // Adăugăm numărul mașinii
+      ...header, // Header-ul pentru produse
+      ...data, // Datele pentru produse
+    ]);
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Bon");
+
+    // Salvează fișierul Excel pe server cu numele Bon{idBon}.xlsx
+    const __filenameSaveToExcel = fileURLToPath(import.meta.url);
+    const __dirnameSaveToExcel = path.dirname(__filenameSaveToExcel);
+    const filePath = path.join(__dirnameSaveToExcel, `Bon${idBon}.xlsx`);
+
+    // Scriem fișierul Excel
+    XLSX.writeFile(wb, filePath);
+
+    // Trimitem fișierul spre descărcare
+    res.download(filePath, `Bon${idBon}.xlsx`, (err) => {
+      if (err) {
+        console.error("Eroare la trimiterea fișierului:", err);
+        res.status(500).json({ message: "Eroare la descărcare!" });
+      }
+    });
+  } catch (error) {
+    console.error("Eroare server:", error);
+    res.status(500).json({ message: "Eroare server!" });
+  }
+});
 app.listen(8080, () => {
   console.log("Server is running on port 8080");
 });

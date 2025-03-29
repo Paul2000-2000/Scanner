@@ -4,7 +4,7 @@ const stoc = [
     "denumire": "POMPA ALIMENTARE MOTORINA",
     "cod": "68461",
     "codbara": "400000010021",
-    "cantitate": 3
+    "cantitate": 6
   },
   {
     "id": 2,
@@ -18,7 +18,7 @@ const stoc = [
     "denumire": "COMPRESOR AER SCANIA",
     "cod": "NRF 32705",
     "codbara": "400000010168",
-    "cantitate": 6
+    "cantitate": 5
   },
   {
     "id": 4,
@@ -31,13 +31,14 @@ const stoc = [
     "denumire": "CARCASA SCARA",
     "cod": "DT",
     "codbara": "400000010182",
-    "cantitate": 8
+    "cantitate": 7
   },
   {
     "id": 6,
     "denumire": "LAMPA SPATE DREAPTA",
     "cod": "156210",
-    "codbara": "400000010199"
+    "codbara": "400000010199",
+    "cantitate": 1
   },
   {
     "id": 7,
