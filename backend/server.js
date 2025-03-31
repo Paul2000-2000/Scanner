@@ -14,6 +14,7 @@ import bonuriFinalizate from "./bonurifinalizate.js";
 import bonurigestionate from "./bonurigestionate.js";
 import nomenclator from "./nomenclator.js";
 import bodyParser from "body-parser";
+
 import { time } from "console";
 import XLSX from "xlsx";
 
@@ -37,10 +38,21 @@ app.post("/incercarePost", (req, res) => {
   const __dirnameIncercare = path.dirname(__filenameIncercare);
   const filePathIncercare = path.join(__dirnameIncercare, "nomenclator.js");
 
+  const newProducts = req.body;
+
+  const stocProduseCuCantitate = newProducts.map((produs) => {
+    const produsStoc = produseStoc.find(
+      (produsStoc) => produsStoc.codbara === produs.codbara
+    );
+
+    return {
+      ...produs,
+      cantitate: produsStoc ? produsStoc.cantitate : 0,
+    };
+  });
+
   const updatedIncercareSters = `const nomenclator = [];\n\nexport default nomenclator;`;
   fs.writeFileSync(filePathIncercare, updatedIncercareSters);
-
-  const newProducts = req.body;
 
   console.log("Produse primite din frontend:", newProducts);
 
@@ -69,7 +81,7 @@ app.post("/incercarePost", (req, res) => {
   fs.writeFileSync(filePathStoc, updatedStocSters);
 
   const updatedStoc = `const stoc = ${JSON.stringify(
-    newProducts,
+    stocProduseCuCantitate,
     null,
     2
   )};\n\nexport default stoc;`;
@@ -84,7 +96,20 @@ app.get("/incercareGet", (req, res) => {
 });
 
 app.get("/produseNomenclator", async (req, res) => {
-  res.json(nomenclator);
+  try {
+    const __filenameNom = fileURLToPath(import.meta.url);
+    const __dirnameNom = path.dirname(__filenameNom);
+    const filePathNom = path.join(__dirnameNom, "nomenclator.js");
+    const bonModuleUrl = pathToFileURL(filePathNom).href;
+
+    // Import dinamic cu "cache busting" pentru a evita caching-ul
+    const mod = await import(bonModuleUrl + "?update=" + Date.now());
+
+    res.json(mod.default); // Trimite obiectul bon ca JSON
+  } catch (error) {
+    console.error("Eroare", error);
+    res.status(500).json({ message: "Eroare." });
+  }
 });
 
 app.get("/produseStoc", async (req, res) => {
