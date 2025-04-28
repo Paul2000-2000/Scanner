@@ -45,6 +45,27 @@ const BonFinalizat = () => {
         );
     }
 
+    const handleModificaBon = async (bon) =>{
+
+        try{
+      
+            const response = await axios.post('http://localhost:8080/modificaBonFinalizat' , bon );
+        
+            if (response.status === 200)
+              {
+                  alert('Poti modifica bonul');
+                  navigate('/stoc');
+              } 
+              else{
+                  alert('Nu poti modifica bonul');
+              }
+        
+          } catch(error) {
+            console.log(error);
+          }
+
+    } 
+
 
     const handleSaveExcelBon  = async ( bon ) =>{
 
@@ -70,7 +91,7 @@ const BonFinalizat = () => {
     return (
         <div className="bon">
              <button className='back-button' onClick={handleBackStoc}>Back</button>
-             <button> Modifica </button>
+             <button className='modifica-btn' onClick={() => handleModificaBon(bon)}> Modifica </button>
              <button onClick={() => handleSaveExcelBon(bon)} className='saveexcelbut'> Save to Excel </button>
        
             
@@ -85,6 +106,7 @@ const BonFinalizat = () => {
                             <th>Codbara</th>
                             <th>Cantitate</th>
                             <th>Timp</th>
+                            <th>Om</th>
 
                         </tr>
                     </thead>
@@ -97,6 +119,7 @@ const BonFinalizat = () => {
         <td>{produs.codbara}</td>
         <td>{produs.cantitate}</td>
         <td>{produs.timp}</td>
+        {produs.om && <td>{produs.om}</td>}
       </tr>
     ))}
                     </tbody>

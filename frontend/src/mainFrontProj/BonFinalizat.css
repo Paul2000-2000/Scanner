@@ -60,3 +60,15 @@
     font-size: 16px;
     height: 55px;
 }
+
+.modifica-btn{
+    width: 250px;
+    padding: 10px 20px;
+    background-color: #a1110c;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    height: 55px;
+}

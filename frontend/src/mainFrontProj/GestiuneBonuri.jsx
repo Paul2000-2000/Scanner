@@ -56,28 +56,33 @@ const GestiuneBonuri = () => {
 
       const filteredBonuri = bonuriGestionate.filter((bon) => {
         const matchesId = filterId ? bon.id.toString().includes(filterId) : true;
-        const matchesMasina = filterMasina ? bon.masina.toLowerCase().includes(filterMasina.toLowerCase()) : true;
+        const matchesMasina = filterMasina ? bon.masina?.toLowerCase().includes(filterMasina.toLowerCase()) : true;
       
-        // Filtrarea produselor în cadrul fiecărui bon
+        if (!filterText) {
+          // Dacă nu cauți după produs, afișează tot
+          return matchesId && matchesMasina;
+        }
+      
+        // Dacă cauți după produs, filtrează produsele bonului
         const filteredProduse = bon.produse.filter((produs) => {
           const denumire = String(produs.denumire || '').toLowerCase();
           const cod = String(produs.cod || '').toLowerCase();
           const codbara = String(produs.codbara || '').toLowerCase();
           const filterTextLower = filterText.toLowerCase();
       
-          // Verificăm dacă produsul conține textul de căutare
           return denumire.includes(filterTextLower) ||
                  cod.includes(filterTextLower) ||
                  codbara.includes(filterTextLower);
         });
       
-        return matchesId && matchesMasina && filteredProduse.length > 0; // Filtrăm bonurile pentru a avea produse corespunzătoare
+        // Afișează doar bonurile care conțin produse ce se potrivesc
+        return matchesId && matchesMasina && filteredProduse.length > 0;
       });
 
   return (
     <div className="container">
       <button className="back-button" onClick={handleBackStoc}>Back</button>
-      <h2 className="title">Bonuri Gestionate</h2>
+      <h2 className="title">Bonuri de Consum</h2>
       <div className="bonuri-container">
            <input
           type="text"
@@ -135,6 +140,8 @@ const GestiuneBonuri = () => {
             <p>{produs.denumire}</p>
             <p>{produs.codbara}</p>
             <p>{produs.cod}</p>
+            <p>{produs.timp}</p>
+            {produs.om && <p>Om: {produs.om}</p>}
           </div>
         ))
       }

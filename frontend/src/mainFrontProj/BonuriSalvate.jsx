@@ -135,6 +135,7 @@ const handleBackStoc = () =>{
                           <p>Cantitate: {produs.cantitate}</p>
                           <p>Timp: {produs.timp}</p>
                           {/* <button className="delete-btn" onClick={() => handleStergeProdus(bon.id, produs.cod)}>Șterge</button> */}
+                          {produs.om && <p>Om: {produs.om}</p>}
                         </div>
                       ))}
                     </div>
