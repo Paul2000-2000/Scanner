@@ -58,23 +58,27 @@ const BonGestionat = () => {
                 <table>
                     <thead>
                         <tr>
+                        <th>Nr Curent Produs</th>
                             <th>Denumire</th>
                             <th>Cod</th>
                             <th>Codbara</th>
                             <th>Cantitate</th>
                             <th>Timp</th>
+                            <th>Om</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {bonGestionat.produse.map((produs) => (
-                            <tr key={produs.cod}>
-                                <td>{produs.denumire}</td>
-                                <td>{produs.cod}</td>
-                                <td>{produs.codbara}</td>
-                                <td>{produs.cantitate}</td>
-                                <td>{produs.timp}</td>
-                            </tr>
-                        ))}
+                    {bonGestionat.produse.map((produs, index) => (
+      <tr key={produs.cod}>
+        <td>{index + 1}</td> 
+        <td>{produs.denumire}</td>
+        <td>{produs.cod}</td>
+        <td>{produs.codbara}</td>
+        <td>{produs.cantitate}</td>
+        <td>{produs.timp}</td>
+        {produs.om && <td>{produs.om}</td>}
+      </tr>
+    ))}
                     </tbody>
                 </table>
     

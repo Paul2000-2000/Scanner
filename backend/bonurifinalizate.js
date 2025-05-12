@@ -1,186 +1,122 @@
 const bonurifinalizate = [
   {
-    "id": 1,
-    "masina": "AR25ABC",
+    "id": 183,
+    "masina": "AR28AXP",
     "produse": [
       {
-        "denumire": "PROTECTIE FAR",
-        "cod": "FARA COD",
-        "codbara": "400000010175",
-        "cantitate": 1
-      },
-      {
-        "denumire": "ACUMULATORI PROMOTIVE SILVER",
-        "cod": "680108100",
-        "codbara": "400000010038",
-        "cantitate": 2
-      },
-      {
-        "denumire": "PRES BARA SPATE",
-        "cod": "700300",
-        "codbara": "400000010205",
-        "cantitate": 1
-      }
-    ]
-  },
-  {
-    "id": 2,
-    "masina": "AR45XYZ",
-    "produse": [
-      {
-        "denumire": "POMPA ALIMENTARE MOTORINA",
-        "cod": "68461",
-        "codbara": "400000010021",
-        "cantitate": 1
-      },
-      {
-        "denumire": "COMPRESOR AER SCANIA",
-        "cod": "NRF 32705",
-        "codbara": "400000010168",
-        "cantitate": 1
-      },
-      {
-        "denumire": "CARCASA SCARA",
-        "cod": "DT",
-        "codbara": "400000010182",
-        "cantitate": 1
-      }
-    ]
-  },
-  {
-    "id": 3,
-    "masina": "AR25ABC",
-    "produse": [
-      {
-        "denumire": "COMPRESOR AER SCANIA",
-        "cod": "NRF 32705",
-        "codbara": "400000010168",
-        "cantitate": 1
-      },
-      {
-        "denumire": "PROTECTIE FAR",
-        "cod": "FARA COD",
-        "codbara": "400000010175",
-        "cantitate": 1
-      }
-    ]
-  },
-  {
-    "id": 6,
-    "masina": "AR25ABC",
-    "produse": [
-      {
-        "denumire": "PRES BARA SPATE",
-        "cod": "700300",
-        "codbara": "400000010205",
-        "cantitate": 1
-      },
-      {
-        "denumire": "CARCASA SCARA",
-        "cod": "DT",
-        "codbara": "400000010182",
-        "cantitate": 1
-      }
-    ]
-  },
-  {
-    "id": 27,
-    "masina": "AR25ABC",
-    "produse": [
-      {
-        "denumire": "POMPA ALIMENTARE MOTORINA",
-        "cod": "68461",
-        "codbara": "400000010021",
-        "cantitate": 2
-      },
-      {
-        "denumire": "LAMPA SPATE DREAPTA",
-        "cod": "156210",
-        "codbara": "400000010199",
-        "cantitate": 1
-      }
-    ]
-  },
-  {
-    "id": 42,
-    "masina": "AR32DIA",
-    "produse": [
-      {
-        "denumire": "POMPA ALIMENTARE MOTORINA",
-        "cod": "68461",
-        "codbara": "400000010021",
-        "cantitate": 3,
-        "timp": "24-18:12"
-      },
-      {
-        "denumire": "ACUMULATORI PROMOTIVE SILVER",
-        "cod": "680108100",
-        "codbara": "400000010038",
+        "denumire": "CUREA INTINZATOR",
+        "cod": "1.21962",
+        "codbara": "400000010380",
         "cantitate": 1,
-        "timp": "24-18:16"
+        "timp": "13:36:26 - 23.04.2025"
       },
       {
-        "denumire": "COMPRESOR AER SCANIA",
-        "cod": "NRF 32705",
-        "codbara": "400000010168",
+        "denumire": "SPRAY ARGINTIU WHELL",
+        "cod": "RAL 9006",
+        "codbara": "400000010335",
         "cantitate": 1,
-        "timp": "24-18:17"
+        "timp": "13:36:33 - 23.04.2025"
       },
+      {
+        "denumire": "SPRAY NEGRU MAT 600 ML",
+        "cod": "CAR S",
+        "codbara": "400000010328",
+        "cantitate": 1,
+        "timp": "13:36:35 - 23.04.2025"
+      }
+    ],
+    "exportat": true
+  },
+  {
+    "id": 182,
+    "masina": "AR67ABC",
+    "produse": [
       {
         "denumire": "CARCASA SCARA",
         "cod": "DT",
         "codbara": "400000010182",
         "cantitate": 1,
-        "timp": "24-18:17"
+        "timp": "13:35:31 - 23.04.2025"
       },
       {
-        "denumire": "PRIZA 5*32A",
-        "cod": "3P+N+T/380V",
-        "codbara": "400000010298",
+        "denumire": "SPOILER BARA FATA DREAPTA MAN",
+        "cod": "32NMN0079P",
+        "codbara": "400000010212",
         "cantitate": 1,
-        "timp": "24-18:17"
+        "timp": "13:52:01 - 24.04.2025"
+      },
+      {
+        "denumire": "COLIER FLEXIBIL ESAPAMENT",
+        "cod": "FE 310 Y8 0 0",
+        "codbara": "400000010236",
+        "cantitate": 1,
+        "timp": "13:52:02 - 24.04.2025"
       }
-    ]
+    ],
+    "exportat": true
   },
   {
-    "id": 44,
-    "masina": "AR32DIA",
+    "id": 184,
+    "masina": "BH32POG",
     "produse": [
       {
-        "denumire": "ACUMULATORI PROMOTIVE SILVER",
-        "cod": "680108100",
-        "codbara": "400000010038",
+        "denumire": "GARNITURA  DPF DINEX SET",
+        "cod": "DIN2AL042",
+        "codbara": "400000603261",
         "cantitate": 1,
-        "timp": "24-18:22"
+        "timp": "18:02:42 - 24.04.2025"
       },
+      {
+        "denumire": "FILTRU COMBUSTIBIL SCANIA",
+        "cod": "PU10003-2X",
+        "codbara": "400000536286",
+        "cantitate": 1,
+        "timp": "18:02:46 - 24.04.2025"
+      },
+      {
+        "denumire": "FILTRU COMBUSTIBIL SCANIA",
+        "cod": "PU10003-2X",
+        "codbara": "400000536286",
+        "cantitate": 1,
+        "timp": "18:03:18 - 24.04.2025"
+      }
+    ],
+    "exportat": true
+  },
+  {
+    "id": 187,
+    "masina": "AR25ABC",
+    "produse": [
       {
         "denumire": "POMPA ALIMENTARE MOTORINA",
         "cod": "68461",
         "codbara": "400000010021",
         "cantitate": 1,
-        "timp": "24-18:23"
+        "timp": "10:06:18 - 28.04.2025"
       }
-    ]
+    ],
+    "exportat": 0
   },
   {
-    "id": 45,
-    "masina": "BH12MAG",
+    "id": 180,
+    "masina": "AR67ABC",
     "produse": [
       {
-        "denumire": "ACUMULATORI PROMOTIVE SILVER",
-        "cod": "680108100",
-        "codbara": "400000010038",
+        "denumire": "SPRAY BRONZ EFECT",
+        "cod": "AG 400ML",
+        "codbara": "400000010397",
         "cantitate": 1,
-        "timp": "24-18:25"
+        "timp": "13:34:27 - 23.04.2025"
       },
       {
-        "denumire": "COMPRESOR AER SCANIA",
-        "cod": "NRF 32705",
-        "codbara": "400000010168",
+        "denumire": "GARNITURA TURBO",
+        "cod": "LE21841.00",
+        "codbara": "400000010373",
         "cantitate": 1,
-        "timp": "24-18:25"
+        "timp": "13:34:28 - 23.04.2025"
       }
-    ]
+    ],
+    "exportat": 0
   }
 ];
 

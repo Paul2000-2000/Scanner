@@ -200,8 +200,9 @@
   .stoc-container {
     display: flex;
     justify-content: space-between;
-    gap: 55px;
+    gap: 25px;
     margin: 0 auto;
+    width: 100vw;
 }
 
 
@@ -235,7 +236,7 @@
 }
 
 .table-container {
-  flex: 2;
+  
   background-color: #fff;
   padding: 20px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -252,6 +253,7 @@ th, td {
   padding: 12px;
   border: 1px solid #ddd;
   text-align: center;
+  width: 55px;
 }
 
 th {
@@ -303,6 +305,7 @@ button:hover {
 }
 
 .bon-activ th, .bon-activ td {
+  width: 25px;
   padding: 12px;
   border: 1px solid #ddd;
   text-align: center;

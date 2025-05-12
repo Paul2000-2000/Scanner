@@ -11,6 +11,8 @@ const AdaugaProdus = () => {
     const [inputQuantities, setInputQuantities] = useState({}); 
     const navigate = useNavigate();
 
+    const [visibleCount, setVisibleCount] = useState(30); // începi cu 30 produse
+
     // Function to fetch products from API
     const fetchProduseNomenclator = async () => {
         try {
@@ -61,17 +63,19 @@ const AdaugaProdus = () => {
     }
 
 
+
+
     const handleAddProduct = async (produs) => {
         const inputQuantity = inputQuantities[produs.id];
 
       
         if (inputQuantity <= 0) {
-            alert('Please enter a valid quantity greater than 0.');
+            alert('Introdu o valoare mai mare decat!');
             return;
         }
 
         if (inputQuantity == undefined){
-            alert('Please enter a valid quantity.');
+            alert('Introdu o valoare!');
             return;
         }
 
@@ -87,9 +91,10 @@ const AdaugaProdus = () => {
                 });
 
                 if (response.status === 200) {
-                    alert(`Stock updated for ${produs.denumire}`);
+                    alert(`Stoc updatat pentru ${produs.denumire}`);
                     setProduseStoc(response.data.updatedStock);
-                    navigate('/');
+                    setFilterText("");
+                    fetchProdusStoc();
 
                 } else {
                     alert('Error updating stock');
@@ -103,6 +108,42 @@ const AdaugaProdus = () => {
         }
     };
 
+    const handleAddProductDefault = async (codbara) => {
+        const inputQuantity = 1;
+
+    
+
+        const existingProduct = produseStoc.find(stoc => stoc.codbara === codbara);
+
+        if (existingProduct) {
+            try {
+
+              
+               
+                const response = await axios.put('http://localhost:8080/updateStock', {
+                    id: existingProduct.id,
+                    quantity: inputQuantity 
+                });
+
+                if (response.status === 200) {
+                    alert(`Stoc updatat pentru ${existingProduct.denumire}`);
+                    setProduseStoc(response.data.updatedStock);
+                    setFilterText("");
+                    fetchProdusStoc();
+
+                } else {
+                    alert('Error updating stock');
+                }
+            } catch (error) {
+                console.error('Error updating stock:', error);
+                alert('An error occurred while updating the stock.');
+            }
+        } else {
+            alert('Product not found in stock.');
+        }
+    };
+
+
     const filteredProduse = produseNomenclator.filter(produs => {
         const denumire = String(produs.denumire || '').toLowerCase();
         const cod = String(produs.cod || '').toLowerCase();
@@ -113,6 +154,27 @@ const AdaugaProdus = () => {
                cod.includes(filterTextLower) ||
                codbara.includes(filterTextLower);
     });
+
+    const visibleProduse = filteredProduse.slice(0, visibleCount);
+
+
+    useEffect(() => {
+        const isValidCodBara = /^\d{12}$/.test(filterText);
+      
+        if (isValidCodBara) {
+          handleAddProductDefault(filterText);
+          setFilterText(""); // opțional: resetezi câmpul după ce e folosit
+        }
+      }, [filterText ]);
+
+
+
+    const handleScroll = (e) => {
+        const { scrollTop, scrollHeight, clientHeight } = e.target;
+        if (scrollTop + clientHeight >= scrollHeight - 50) {
+          setVisibleCount((prev) => prev + 30); // încarci încă 30
+        }
+      };
 
     return (
         <div className='adauga-produs'>
@@ -126,6 +188,8 @@ const AdaugaProdus = () => {
                 onChange={handleFilterChange}
             />
 
+<div   style={{ height: "100vh", width:"75vw",overflowY: "auto",marginTop: "1rem" , padding:"25px"}}
+  onScroll={handleScroll}>
             <table>
                 <thead>
                     <tr>
@@ -137,7 +201,7 @@ const AdaugaProdus = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {filteredProduse.map(produs => (
+                    {visibleProduse.map(produs => (
                         <tr key={produs.id}>
                             <td>{produs.id}</td>
                             <td>{produs.denumire}</td>
@@ -158,6 +222,7 @@ const AdaugaProdus = () => {
                     ))}
                 </tbody>
             </table>
+            </div>
         </div>
     );
 };

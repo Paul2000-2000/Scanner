@@ -4,6 +4,11 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import * as XLSX from "xlsx";
 import { useLocation } from 'react-router-dom';
+import AdaugaProdus from './AdaugaProdus';
+import { FaCar } from "react-icons/fa6";
+import { FaCartShopping } from "react-icons/fa6";
+
+
 
 
 const Stoc = ( ) => {
@@ -11,6 +16,7 @@ const Stoc = ( ) => {
 
   const location = useLocation(); // Obține locația curentă
   const [produseStoc, setProduseStoc] = useState([]);
+
   const [filterText, setFilterText] = useState(''); 
   const [quantities, setQuantities] = useState({});
   const [bon, setBon] = useState({ id:null ,  masina: null, produse: [] });
@@ -24,14 +30,17 @@ const Stoc = ( ) => {
 
   const [searchText, setSearchText] = useState(""); 
   const [searchTextSchimba, setSearchTextSchimba] = useState(""); 
+  const [searchTextOm, setSearchTextOm] = useState(""); 
 
 
   const [showDropdown, setShowDropdown] = useState(false);
   const [showDropdownSchimba, setShowDropdownSchimba ] = useState(false);
+  
   const dropdownRef = useRef(null);
   const dropdownChangeRef= useRef(null);
 
-  
+
+  const [visibleCount, setVisibleCount] = useState(30); // începi cu 30 produse
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -103,13 +112,78 @@ const Stoc = ( ) => {
             body: JSON.stringify(filteredData),
         });
 
+
+        alert("Fisier produse schimbat cu succes!");
+        fetchProdusStoc();
      
     };
+};
+
+const handleFileUploadMasini = async (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  // Verificăm dimensiunea fișierului (de exemplu, maxim 10MB)
+  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
+  if (file.size > MAX_FILE_SIZE) {
+      alert("Fișierul este prea mare! Maxim 10MB.");
+      return;
+  }
+
+  const reader = new FileReader();
+  reader.readAsBinaryString(file);
+
+  reader.onload = async (e) => {
+      const data = e.target.result;
+      const workbook = XLSX.read(data, { type: "binary" });
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+      const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+      const filteredDataMasini = jsonData.slice(1).map((row, index) => {
+          const [ Nrauto, fel, marca] = row;
+          return {
+              id: index + 1,
+              Nrauto,
+              fel,
+              marca,
+          };
+      });
+
+      console.log("Masini procesate:", filteredDataMasini);
+
+      await fetch("http://localhost:8080/incercarePostMasini", {
+          method: "POST",
+          headers: {
+              "Content-Type": "application/json",
+          },
+          body: JSON.stringify(filteredDataMasini),
+      });
+
+
+      alert("Fisier masini schimbat cu succes!");
+      fetchMasini();
+   
+  };
 };
 
 const handleVeziNomenclator = () =>{
   navigate('/nomenclator');
 };
+
+
+// const fetchOameni = async () => {
+//   try {
+//       const response = await axios.get('http://localhost:8080/oameni');
+//       if (response.status === 200) 
+//           setOameni(response.data);  
+//       else
+//           console.error(`Error fetching data: ${response.status}`);
+//   } catch (error) {
+//       console.error('Error fetching data:', error);
+//   }
+// };
 
 const fetchProdusStoc = async () => {
     try {
@@ -128,7 +202,7 @@ const fetchBonuriSalvate = async () => {
     const response = await axios.get("http://localhost:8080/bonurisalvate");
     setbonuriSalvate(response.data);
   } catch {
-    alert('Failed to fetch data');
+    alert('Nu exista bonuri salvate!');
   }
 };
 
@@ -137,7 +211,7 @@ const fetchBonuriFinalizate = async () => {
     const response = await axios.get("http://localhost:8080/bonurifinalizate");
     setBonuriFinalizate(response.data);
   } catch {
-    alert('Failed to fetch data');
+    alert('Nu exista bonuri finalizate!');
   }
 };
 
@@ -192,28 +266,16 @@ const fetchBonSalvat = async (carNumber) => {
       params: { masina: carNumber },
     });
 
-
     console.log("Răspunsul de la server:", response.data);
 
-
-    if (response.status === 200) {
-      if (response.data.bon) {
-        // Bon salvat găsit
-        console.log("Bon existent găsit:", response.data);
-        setBon(response.data.bon);
-      
-      } else {
-        // Nu există bon salvat, creează unul gol
-        console.log("Nu există bon salvat pentru această mașină. Creăm un bon nou.");
-        setBon({ id: null, masina: carNumber, produse: [] });
-      }
-      fetchBonuriSalvate();
+    if (response.status === 200 && response.data.bon) {
+      return response.data.bon; // Doar returnează bonul
     } else {
-      console.error("Eroare la obținerea bonului salvat");
+      return null;
     }
   } catch (error) {
-    console.log(error);
-    setBon({ id: null, masina: carNumber, produse: [] });
+    console.error("Eroare la fetchBonSalvat:", error);
+    return null;
   }
 };
 
@@ -232,74 +294,79 @@ const fetchMasini = async () => {
 };
 
 const filteredCars = masini.filter(car =>
-    (`${car.numar} ${car.marca}`).toLowerCase().includes(searchText.toLowerCase())
+    (`${car.Nrauto} `).toLowerCase().includes(searchText.toLowerCase())
 );
 
 const filteredCarsSchimba = masiniSchimba.filter(car =>
-  searchTextSchimba ? (`${car.numar} ${car.marca}`).toLowerCase().includes(searchTextSchimba.toLowerCase()) : true
+  searchTextSchimba ? (`${car.Nrauto} `).toLowerCase().includes(searchTextSchimba.toLowerCase()) : true
 );
 
 const handleSelectCar = async (car) => {
-    // Salvează mașina anterioară
-    setPreviousCar(selectedCar);
-    // Dacă există un bon activ cu produse și schimbăm mașina, trebuie salvat
-    if (bon.produse.length > 0 && selectedCar !== car.numar) {
-      try {
-        const response = await axios.post("http://localhost:8080/adaugaBonSalvat", {
-          id: bon.id,
-          masina: bon.masina,
-          produse: bon.produse,
-        });
-  
-        if (response.status === 200) {
-          alert(response.data.message);
-  
-          // Resetăm bonul după salvare
-          setBon({ id: null, masina: null, produse: [] });
-  
-          // Ștergem selecția curentă din localStorage
-          localStorage.removeItem('selectedCar');
+  const carNumar = car.Nrauto.trim();
+  const selectedCarTrimmed = selectedCar?.trim();
 
-          fetchProdusStoc();
-  
-          // Navigăm către altă pagină (opțional)
-          navigate('/stoc');
-        } else {
-          alert("Eroare: " + response.data.message);
-          return; // Dacă apare eroare, oprim execuția
-        }
-      } catch (error) {
-        console.error("Eroare la trimiterea formularului:", error);
-        alert("A apărut o problemă la trimiterea formularului. Încearcă din nou.");
+  console.log("Carnumar este:", carNumar);
+  console.log("Selected car este:", selectedCar);
+
+  // UI + LocalStorage
+  setSelectedCar(carNumar);
+  setSearchText(`${carNumar} `);
+  setShowDropdown(false);
+  localStorage.setItem("selectedCar", `${carNumar} `);
+  localStorage.setItem("searchText", `${carNumar} `);
+  setPreviousCar(selectedCar);
+
+  // Salvăm bonul existent dacă trebuie
+  if (bon.produse.length > 0 && selectedCarTrimmed !== carNumar) {
+    try {
+      const response = await axios.post("http://localhost:8080/adaugaBonSalvat", {
+        id: bon.id,
+        masina: bon.masina,
+        produse: bon.produse,
+      });
+
+      if (response.status === 200) {
+        alert(response.data.message);
+        setBon({ id: null, masina: null, produse: [] });
+        localStorage.removeItem("selectedCar");
+        fetchProdusStoc();
+        navigate("/stoc");
+      } else {
+        alert("Eroare la salvare bon: " + response.data.message);
         return;
       }
-    } else {
-      // Dacă nu sunt produse sau nu schimbăm mașina, resetăm bonul
-      setBon({ id: null, masina: null, produse: [] });
-  
-      // Ștergem selecția curentă din localStorage (doar dacă nu există produse)
-      localStorage.removeItem('selectedCar');
+    } catch (error) {
+      console.error("Eroare la salvare:", error);
+      alert("Eroare la salvare bon.");
+      return;
     }
-    // Actualizăm selecția de mașină
-    setSelectedCar(car.numar);
-    setSearchText(`${car.numar} ${car.marca}`);
-    setShowDropdown(false);
-  
-    // Salvăm mașina selectată în localStorage
-    localStorage.setItem("selectedCar", JSON.stringify(car));
-    localStorage.setItem("searchText", `${car.numar} ${car.marca}`);
-  
-    // Căutăm un bon salvat pentru această mașină
-   await fetchBonSalvat(car.numar);
-    //fetchBonuriSalvate();
-    console.log(bon);
+  }
+
+  // Verificăm dacă există bon salvat pentru mașina nouă
+  try {
+    const bonSalvat = await fetchBonSalvat(carNumar);
+    if (bonSalvat) {
+      setBon(bonSalvat);
+      console.log("BON INSTANT GĂSIT:", bonSalvat); // ✅ ai acces instant
+      await fetchBon();
+    } else {
+      const bonNou = { id: null, masina: carNumar, produse: [] };
+      setBon(bonNou);
+      console.log("BON NOU INSTANT:", bonNou);
+    }
+  } catch (error) {
+    console.error("Eroare la fetch bon salvat:", error);
+    alert("Nu s-a putut verifica dacă există bon salvat.");
+  }
 };
+
+
 
 const handleChangeCar  = async ( car ) =>{
 
-  console.log('Masina schimba ar numarul' , car.numar);
+  console.log('Masina schimba ar numarul' , car.Nrauto);
 
-  setSearchTextSchimba(car.numar); // Sau orice alt atribut care reprezintă mașina (de exemplu, car.marca)
+  setSearchTextSchimba(car.Nrauto); // Sau orice alt atribut care reprezintă mașina (de exemplu, car.marca)
   setShowDropdownSchimba(false);  // Închide dropdown-ul
 
 
@@ -307,7 +374,7 @@ const handleChangeCar  = async ( car ) =>{
   try {
    
     const response = await axios.post("http://localhost:8080/schimbaMasina", {
-      masina: car.numar,  // Trimite valoarea selectată din input
+      masina: car.Nrauto,  // Trimite valoarea selectată din input
     });
 
     if (response.status === 200) {
@@ -316,13 +383,13 @@ const handleChangeCar  = async ( car ) =>{
       // Resetăm bonul după salvare
       setBon({ id: bon.id, masina: searchTextSchimba, produse: bon.produse });
 
-      setSelectedCar(car.numar);
-      setSearchText(`${car.numar} ${car.marca}`);
+      setSelectedCar(car.Nrauto);
+      setSearchText(`${car.Nrauto}`);
       setSearchTextSchimba("");
 
       
-      localStorage.setItem("selectedCar", JSON.stringify(car));
-      localStorage.setItem("searchText", `${car.numar} ${car.marca}`);
+      localStorage.setItem("selectedCar", JSON.stringify(car.Nrauto));
+      localStorage.setItem("searchText", `${car.Nrauto}`);
 
       
       fetchBon();
@@ -354,6 +421,7 @@ const handleStergeProdus = async (bonId, codbara) => {
         alert('Produsul a fost șters');
          fetchBon();
          fetchProdusStoc();
+         fetchMasini();
 
        
         console.log(selectedCar);  
@@ -410,6 +478,7 @@ const handleSalveazaBon = async () => {
             fetchBon();
             fetchBonuriSalvate();
             fetchProdusStoc();
+            fetchMasini();
             
             navigate('/stoc'); // Navighează la altă pagină
 
@@ -455,6 +524,7 @@ const handleFinalizeazaBon = async () => {
 
           setPreviousCar(null);
           fetchProdusStoc();
+          fetchMasini();
          
           
           navigate('/stoc'); // Navighează la altă pagină
@@ -539,6 +609,13 @@ useEffect(() => {
 }, [location]); // Când locația se schimbă, recuperează valoarea
 
 
+// useEffect(() =>{
+
+//  const inputScaner = document.getElementById("inputscaner");
+
+//   handleAddProduct(inputScaner);
+
+// } , [])
 
 
   useEffect(() => {
@@ -546,6 +623,7 @@ useEffect(() => {
     fetchMasini();
     fetchBonuriSalvate();
     fetchBonuriFinalizate();
+    // fetchOameni();
     
   }, []);
 
@@ -577,6 +655,18 @@ const filteredProduse = produseStoc.filter(produs => {
          codbara.includes(filterTextLower);
 });
 
+const visibleProduse = filteredProduse.slice(0, visibleCount);
+
+
+
+    const handleScroll = (e) => {
+        const { scrollTop, scrollHeight, clientHeight } = e.target;
+        if (scrollTop + clientHeight >= scrollHeight - 50) {
+          setVisibleCount((prev) => prev + 30); // încarci încă 30
+        }
+      };
+
+
 const handleQuantityChange = (id, value) => {
   const newQuantity = value === "" ? "" : Math.max(1, parseInt(value)); // Ensure the value is a number and defaults to 1
   setQuantities(prevQuantities => ({
@@ -590,18 +680,18 @@ const handleAddProduct = async (produs) => {
   const stockQuantity = produs.cantitate;
 
   if (desiredQuantity > stockQuantity) {
-    alert(`Error: Desired quantity (${desiredQuantity}) exceeds available stock (${stockQuantity}).`);
+    alert(`Eroare: Cantitatea (${desiredQuantity}) este mai mare decat (${stockQuantity}).`);
     return;
   }
 
   if (desiredQuantity < 0) {
-    alert("Error: Desired quantity cannot be negative.");
+    alert("Nu poate sa fie negativa!");
     return;
   }
 
   
   if (!selectedCar) {
-    alert("Please select a car first.");
+    alert("Selecteaza masina!");
     return;
   }
 
@@ -619,24 +709,16 @@ const handleAddProduct = async (produs) => {
 
     const now = new Date();
 
-    const day = now.getDate(); // Day of the month (1-31)
-const hours = now.getHours().toString().padStart(2, '0'); // Ensure 2-digit format
-const minutes = now.getMinutes().toString().padStart(2, '0'); // Ensure 2-digit format
+    const year = now.getFullYear(); // 2025
+    const day = now.getDate().toString().padStart(2, '0'); // 31
+    const month = (now.getMonth() + 1).toString().padStart(2, '0'); // 03
+    const hours = now.getHours().toString().padStart(2, '0'); // 18
+    const minutes = now.getMinutes().toString().padStart(2, '0'); // 23
+    const seconds = now.getSeconds().toString().padStart(2, '0'); // 23
+    
   
     // Adăugăm produsul la bonul curent
-    const updatedProducts = [...bon.produse, {
-      denumire: produs.denumire,
-      cod: produs.cod,
-      codbara: produs.codbara,
-      cantitate: desiredQuantity,
-      timp: `${day}-${hours}:${minutes}` // Properly formatted time
-    }];
-  
-    // Actualizăm bonul cu noul produs
-    setBon(prevBon => ({
-      ...prevBon,
-      produse: updatedProducts
-    }));
+   
   
 
     // Verifică dacă datele sunt corecte înainte de a le trimite
@@ -646,7 +728,7 @@ const minutes = now.getMinutes().toString().padStart(2, '0'); // Ensure 2-digit 
       codbara: produs.codbara,
       cantitate: desiredQuantity,
       masina: selectedCar,
-      timp: `${day}-${hours}:${minutes}` // Properly formatted time
+      timp: `${hours}:${minutes}:${seconds} - ${day}.${month}.${year}` // Properly formatted time
     };
 
   try {
@@ -657,6 +739,22 @@ const minutes = now.getMinutes().toString().padStart(2, '0'); // Ensure 2-digit 
    
     if (response.status === 200) {
       alert(response.data.message);
+
+      const updatedProducts = [...bon.produse, {
+        denumire: produs.denumire,
+        cod: produs.cod,
+        codbara: produs.codbara,
+        cantitate: desiredQuantity,
+        timp: `${hours}:${minutes}:${seconds} - ${day}.${month}.${year}` // Properly formatted time
+      }];
+    
+      // Actualizăm bonul cu noul produs
+      setBon(prevBon => ({
+        ...prevBon,
+        produse: updatedProducts
+      }));
+
+      setFilterText("");
 
       
       if (!bon.masina) {
@@ -670,12 +768,35 @@ const minutes = now.getMinutes().toString().padStart(2, '0'); // Ensure 2-digit 
       
     } else {
       alert("Error: " + response.data.message);
+      setFilterText("");
+    
     }
   } catch (error) {
     console.error("Error submitting form:", error);
-    alert("Enter a value for quantity.");
+    alert("Eroare input sau cantitate stoc");
   }
 };
+
+
+const handleAddCobara = async ( codbara ) =>{ 
+
+    const produsCodBaraFct = produseStoc.find( ( p) => p.codbara === codbara);
+
+    if (produsCodBaraFct) 
+      handleAddProduct(produsCodBaraFct);
+
+
+}
+
+
+useEffect(() => {
+  const isValidCodBara = /^\d{12}$/.test(filterText);
+
+  if (isValidCodBara) {
+    handleAddCobara(filterText);
+    setFilterText(""); // opțional: resetezi câmpul după ce e folosit
+  }
+}, [filterText ]);
 
 const handleVeziGestiune = () =>{
       navigate('/gestiunebonuri');
@@ -695,10 +816,16 @@ const handleAdaugaProdus = () =>{
       navigate('/adauga-produs');
 }
 
-const handleSearchChangeSchimba = ( ) =>{
-
+const handleSearchChangeSchimba = () =>{
 }
 
+const handleSearchSelecteazaOm = (codbara, timp, value) => {
+  const key = `${codbara}_${timp}`;
+  setSearchTextOm((prev) => ({
+    ...prev,
+    [key]: value,
+  }));
+};
 const handleSaveExcel  = async ( produseStoc ) =>{
 
   try{
@@ -720,6 +847,64 @@ const handleSaveExcel  = async ( produseStoc ) =>{
 }
 
 
+const handleSelecteazaOm  = async ( codbara, timp ) =>{
+
+  const key = `${codbara}_${timp}`;
+  
+  const omNume = searchTextOm[key];
+
+  if (!omNume) {
+    alert("Te rog introdu un nume pentru Om.");
+    return;
+  }
+
+  
+  console.log('Codbara produs este:', codbara);
+  console.log('Omul este:', omNume);
+  console.log("Timp produs:", timp);
+
+
+  try {
+   
+    const response = await axios.post("http://localhost:8080/omBonProdus", {
+      codbara: codbara,
+      timp: timp,
+      om: omNume,
+    });
+    console.log("Răspuns de la server:", response.data);
+
+    if (response.status === 200) {
+      alert(response.data.message);
+
+ 
+   
+      setSearchTextOm((prev) => ({
+        ...prev,
+        [key]: "",
+      }));
+
+    
+
+      
+      fetchBon();
+  
+      navigate('/stoc');
+    } else {
+      alert("Eroare: " + response.data.message);
+      return; // Dacă apare eroare, oprim execuția
+    }
+  } catch (error) {
+    console.error("Eroare la trimiterea formularului:", error);
+    alert("A apărut o problemă la trimiterea formularului. Încearcă din nou.");
+    return;
+  }
+
+
+
+
+}
+
+
   return (
     <div className='stoc-produse'>
             <nav className="navigation">
@@ -732,14 +917,48 @@ const handleSaveExcel  = async ( produseStoc ) =>{
                 </div>
 </nav>
             <button onClick={() => handleSaveExcel(produseStoc)} className='saveexcelbut'> Save  to Excel </button>
-            <h2> Produse Stoc </h2>
+
+
+           
+
+        <div style={{display:"flex" , width:"100vw" , gap:"55px"}}>
+
+        <div className='input-fisier' style={{display:"flex", alignItems:"center" , justifyContent:"center"}}>
+            
+            <input 
+               type="file" 
+               accept=".xls,.xlsx" 
+               onChange={handleFileUpload} 
+               className="file-input"
+            />
+  <FaCartShopping style={{width:"55px" , height:"55px"}}/>
+        </div>
+
+
+            <div>
+            <h2 style={{marginBottom:"35px"}}> Produse Stoc </h2>
            
             <input 
                 type='text' 
                 placeholder='Cauta produs...' 
                 value={filterText} 
                 onChange={handleFilterChange}
+                id="inputscaner"
             />
+            </div>
+            <div className='input-fisier'  style={{display:"flex", alignItems:"center" , justifyContent:"center"}}>
+            
+            <input 
+               type="file" 
+               accept=".xls,.xlsx" 
+               onChange={handleFileUploadMasini} 
+               className="file-input"
+            />
+    <FaCar style={{width:"55px" , height:"55px"}}/>
+        </div>
+
+
+      </div>
 
             
      
@@ -760,7 +979,7 @@ const handleSaveExcel  = async ( produseStoc ) =>{
     <ul className="car-dropdown">
       {filteredCars.map(car => (
         <li key={car.id} onClick={() => handleSelectCar(car)} className='car-item'> 
-          {car.numar} {car.marca}
+          {car.Nrauto} 
         </li>
       ))}
     </ul>
@@ -770,17 +989,10 @@ const handleSaveExcel  = async ( produseStoc ) =>{
       
 
           <div className='stoc-container'> 
-            <div className='input-fisier'>
-            
-                <input 
-                   type="file" 
-                   accept=".xls,.xlsx" 
-                   onChange={handleFileUpload} 
-                   className="file-input"
-                />
-      <button className='firstPage-button' onClick={handleVeziNomenclator}>Vezi Nomenclator</button>
-            </div>
-            <table>
+           
+            <div   style={{ height: "65vh", width:"50vw",overflowY: "auto",marginTop: "1rem" }}
+  onScroll={handleScroll}>
+            <table style={{width:"100%"}}>
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -792,7 +1004,7 @@ const handleSaveExcel  = async ( produseStoc ) =>{
                     </tr>
                 </thead>
                 <tbody>
-                    {filteredProduse.map(produs => (
+                    {visibleProduse.map(produs => (
                         <tr key={produs.id}>
                             <td>{produs.id}</td>
                             <td>{produs.denumire}</td>
@@ -802,7 +1014,7 @@ const handleSaveExcel  = async ( produseStoc ) =>{
                             <td>
                             <input 
                                     type='number' 
-                                    value={quantities[produs.id] || 1}
+                                    value={quantities[produs.id] !== undefined ? quantities[produs.id] : 1}
                                     onChange={(e) => handleQuantityChange(produs.id, e.target.value)}
                                    
                                     
@@ -811,14 +1023,15 @@ const handleSaveExcel  = async ( produseStoc ) =>{
                             </td>
                             <td>
                             <button onClick={() => handleAddProduct(produs)}>
-                                Adauga Bon
+                                Adauga 
                             </button>
                             </td>
                         </tr>
                     ))}
                 </tbody>
             </table>
-            <div className='bon-activ'>
+            </div>
+            <div className='bon-activ' style={{width:"15vw"}}>
             {bon.id ? (
     <>
       <p className='bon-info'>Id Bon : {bon.id}</p>
@@ -837,7 +1050,7 @@ const handleSaveExcel  = async ( produseStoc ) =>{
     <ul className="car-dropdown">
       {filteredCarsSchimba.map(car => (
         <li key={car.id} onClick={() => handleChangeCar(car)} className='car-item'> 
-          {car.numar} {car.marca}
+          {car.Nrauto} 
         </li>
       ))}
     </ul>
@@ -851,6 +1064,7 @@ const handleSaveExcel  = async ( produseStoc ) =>{
             <th>Codbara</th>
             <th>Cantitate</th>
             <th>Timp</th>
+            <th>Mecanic</th>
           </tr>
         </thead>
         <tbody>
@@ -862,7 +1076,32 @@ const handleSaveExcel  = async ( produseStoc ) =>{
               <td>{produs.cantitate}</td>
               <td>{produs.timp}</td>
               <td>
+
+              {!produs.om ? (
+  <div className="car-selector" style={{width:"145px"}}>
+   <input
+  type="text"
+  style={{width:"145px"}}
+  placeholder="Introdu Mecanic"
+  value={searchTextOm[`${produs.codbara}_${produs.timp}`] || ""}
+  onChange={(e) =>
+    handleSearchSelecteazaOm(produs.codbara, produs.timp, e.target.value)
+  }
+  className="schimbacarinput"
+/>
+  </div>
+) : (
+  <p>{produs.om}</p>
+)}
+
+              </td>
+              <td>
                 <button onClick={() => handleStergeProdus(bon.id, produs.codbara)}>Sterge produs</button>
+              </td>
+              <td>
+              <button onClick={() => handleSelecteazaOm(produs.codbara, produs.timp)}>
+  Selecteaza Mecanic
+</button>
               </td>
             </tr>
           ))}
